@@ -18,6 +18,7 @@ Rails.application.routes.draw do
 
   # Protected navigation routes
   get "workspace", to: "workspace#index", as: :workspace
+  post "workspace", to: "workspace#create"
   get "approvals", to: "approvals#index", as: :approvals
   get "policies", to: "policies#index", as: :policies
   get "audit", to: "audit#index", as: :audit

@@ -1,25 +1,36 @@
 <div class="space-y-6">
-  <div class="flex items-center justify-between border-b border-slate-800 pb-5">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-white font-mono">Approval Center</h1>
-      <p class="text-sm text-slate-400 mt-1">
-        Human-in-the-loop review for sensitive and financial actions proposed by autonomous agents.
+      <div class="flex items-center space-x-2">
+        <h1 class="text-2xl font-black tracking-tight text-[#0d0726] font-sans">Approval Center</h1>
+        <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">HUMAN-IN-THE-LOOP</span>
+      </div>
+      <p class="text-xs text-slate-600 mt-1 font-medium">
+        Cryptographically signed human-in-the-loop review for sensitive and financial actions proposed by autonomous agents.
       </p>
     </div>
-    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-amber-950 text-amber-400 border border-amber-800">
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
       0 Pending Approvals
     </span>
   </div>
 
-  <div class="text-center py-12 border border-dashed border-slate-800 rounded-xl bg-slate-900/50">
-    <div class="inline-flex h-12 w-12 rounded-full bg-slate-800 items-center justify-center text-slate-400 mb-3">
-      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <div class="text-center py-16 border border-dashed border-slate-300 rounded-2xl bg-white shadow-2xs p-6">
+    <div class="inline-flex h-14 w-14 rounded-2xl bg-[#f4f3ef] border border-slate-200 items-center justify-center text-slate-600 mb-4 shadow-2xs">
+      <svg class="w-7 h-7 text-[#0d0726]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     </div>
-    <h3 class="text-sm font-semibold text-slate-300">No approval requests pending</h3>
-    <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-      Sensitive actions (such as payment preparation or high-impact mutations) will halt and appear here for operator verification and signature.
+    <h3 class="text-base font-black uppercase tracking-tight text-[#0d0726]">No approval requests pending</h3>
+    <p class="text-xs text-slate-600 max-w-md mx-auto mt-2 leading-relaxed font-medium">
+      Sensitive actions (such as high-value payouts or destructive operations) will pause and appear here for operator signature before execution.
     </p>
+    <div class="mt-6">
+      <%= link_to workspace_path, class: "inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0d0726] hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition shadow-sm" do %>
+        <span>Delegate Task in Workspace</span>
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      <% end %>
+    </div>
   </div>
 </div>

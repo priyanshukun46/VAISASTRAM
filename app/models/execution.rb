@@ -57,4 +57,24 @@ class Execution < ApplicationRecord
   def blocked?
     status == "blocked"
   end
+
+  def ai_response_text
+    plan["response"].presence || plan["summary"].presence || "Plan prepared."
+  end
+
+  def requires_action?
+    plan["requires_action"] == true || agent_steps.any?
+  end
+
+  def clarification_needed?
+    plan["clarification_needed"].present?
+  end
+
+  def clarification_needed
+    plan["clarification_needed"]
+  end
+
+  def explanation_text
+    plan["explanation"].presence
+  end
 end

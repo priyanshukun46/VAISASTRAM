@@ -3,11 +3,11 @@ financial_agent:
   name: "Invoice Auditor"
   description: "Audits invoices and drafts payments"
   status: "active"
-  configuration: <%= { model: "gemini-2.5-pro", allowed_tools: ["lookup_invoice"] }.to_json %>
+  configuration: <%= { model: "gemini-2.5-pro", allowed_tools: ["lookup_invoice", "verify_invoice", "prepare_payment"] }.to_json %>
 
 admin_agent:
   user: two
   name: "Master Financial Agent"
   description: "Global agent for admin operations"
   status: "active"
-  configuration: <%= { model: "gemini-2.5-pro" }.to_json %>
+  configuration: <%= { model: "gemini-2.5-pro", allowed_tools: ["lookup_invoice", "verify_invoice", "prepare_payment"] }.to_json %>

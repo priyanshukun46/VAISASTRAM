@@ -1,3 +1,21 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 74" width="512" height="512" role="img" aria-label="VAISASTRAM icon">
+  <!-- scales of justice -->
+  <circle cx="29" cy="3.5" r="2.6" fill="#1E1250"/>
+  <rect x="27.8" y="5" width="2.4" height="13" fill="#1E1250"/>
+  <rect x="5" y="6.2" width="48" height="2.4" rx="1.2" fill="#1E1250"/>
+  <g stroke="#1E1250" stroke-width="1.2" fill="none">
+    <path d="M7 8 L1.5 19 M7 8 L12.5 19"/>
+    <path d="M51 8 L45.5 19 M51 8 L56.5 19"/>
+  </g>
+  <path d="M0 19 H14 Q13 25 7 25 Q1 25 0 19Z" fill="#1E1250"/>
+  <path d="M44 19 H58 Q57 25 51 25 Q45 25 44 19Z" fill="#1E1250"/>
+  <!-- head -->
+  <path d="M7 49 C7 33 17 25 29 25 C41 25 51 33 51 49 L51 66 Q51 72 45 72 L13 72 Q7 72 7 66Z" fill="#1E1250"/>
+  <!-- visor -->
+  <rect x="13" y="38" width="32" height="20" rx="8" fill="#E8E8E3"/>
+  <!-- eyes -->
+  <circle cx="23" cy="48" r="4" fill="#1E1250"/>
+  <circle cx="35" cy="48" r="4" fill="#1E1250"/>
+  <!-- chin vent -->
+  <rect x="22" y="64" width="14" height="3" rx="1.5" fill="#E8E8E3"/>
 </svg>

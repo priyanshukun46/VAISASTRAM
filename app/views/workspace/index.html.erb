@@ -1,38 +1,332 @@
-<div class="space-y-6">
-  <div class="flex items-center justify-between border-b border-slate-800 pb-5">
+<div class="space-y-12" data-controller="workspace">
+  <!-- Top Workspace Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-white font-mono">Agent Workspace</h1>
-      <p class="text-sm text-slate-400 mt-1">
+      <div class="flex items-center space-x-2">
+        <h1 class="text-2xl font-black tracking-tight text-[#0d0726] font-sans">Agent Workspace</h1>
+        <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">v2.0</span>
+      </div>
+      <p class="text-xs text-slate-600 mt-1 font-medium">
         Submit natural-language instructions to autonomous agents with real-time policy evaluation.
       </p>
     </div>
-    <div class="flex items-center space-x-2">
-      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
-        Engine: Policy Guard Active
+    <div class="flex items-center space-x-3">
+      <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#ccff00]/30 text-[#0d0726] border border-[#0d0726]">
+        <span class="h-2 w-2 rounded-full bg-[#0d0726] animate-pulse"></span>
+        <span>Policy Guard Active</span>
       </span>
     </div>
   </div>
 
-  <div class="p-6 rounded-xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
-    <h2 class="text-base font-semibold text-white">Delegate Task to Autonomous Agent</h2>
-    <p class="text-xs text-slate-400">
-      The AI agent will decompose this instruction into structured tool calls. Every step will be intercepted by the Ruby policy engine before execution.
+  <!-- Hero Section: Signature UI (matches UX Pilot Reference Image 2) -->
+  <div class="relative py-6 sm:py-10 text-center">
+    <!-- Centered Robot Mascot -->
+    <div class="flex justify-center mb-6">
+      <div class="relative">
+        <%= vaisastram_mascot_svg(classes: "w-20 h-20 transform hover:scale-105 transition duration-200 cursor-pointer", variant: :dark) %>
+      </div>
+    </div>
+
+    <!-- Giant Headline -->
+    <h2 class="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-[#0d0726] leading-none font-sans">
+      AUTONOMOUS AGENTS<br/>
+      <span class="bg-gradient-to-r from-[#7c5cfc] via-[#8b5cf6] to-[#a855f7] bg-clip-text text-transparent">
+        WORTH BUILDING ON
+      </span>
+    </h2>
+
+    <p class="mt-4 text-sm sm:text-base text-slate-600 max-w-xl mx-auto font-medium">
+      Autonomous multi-step planning governed by independent Ruby policies.<br class="hidden sm:inline" />
+      AI proposes. Ruby decides. From prompt to policy-verified execution.
     </p>
 
-    <div class="space-y-3">
-      <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-        Task Instruction
-      </label>
-      <textarea rows="3" class="w-full px-4 py-3 rounded-lg bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition resize-none" placeholder="e.g. Verify invoice INV-100 and prepare a payment of ₹5,000." disabled></textarea>
-      
-      <div class="flex items-center justify-between pt-2">
-        <div class="text-xs text-slate-500 flex items-center space-x-2">
-          <span>Example:</span>
-          <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]">Verify invoice INV-100 and prepare a payment of ₹5,000.</span>
+    <!-- Signature Floating Prompt Input Box (matches UX Pilot Image 2) -->
+    <div class="mt-8 max-w-2xl mx-auto text-left">
+      <div class="bg-white rounded-2xl border border-slate-300 shadow-sm hover:shadow-md transition duration-200 p-4 sm:p-5 relative">
+        <label for="workspace-prompt" class="sr-only">Task Instruction</label>
+        <textarea
+          id="workspace-prompt"
+          data-workspace-target="prompt"
+          rows="3"
+          class="w-full bg-transparent border-0 text-slate-900 placeholder-slate-400 text-sm sm:text-base focus:ring-0 focus:outline-none resize-none"
+          placeholder="Describe what task you want to execute... (e.g. Verify invoice INV-100 and prepare a payment of ₹5,000)"></textarea>
+
+        <!-- Bottom Toolbar inside input card -->
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-2">
+          <!-- Left tool icons -->
+          <div class="flex items-center space-x-2 text-slate-500">
+            <button type="button" title="Add Tool Context" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            <button type="button" title="Tool Allowlist (lookup_invoice, verify_invoice, prepare_payment)" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            <span class="text-[11px] font-mono text-slate-400">3 tools enabled</span>
+          </div>
+
+          <!-- Right: Model selector & Action button -->
+          <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-mono font-medium text-slate-700">
+              <span>Gemini 2.5 Pro</span>
+              <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+            <button
+              type="button"
+              class="h-9 w-9 rounded-xl bg-[#0d0726] hover:bg-black text-white flex items-center justify-center transition shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
+              title="Submit to Agent Planner">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <button class="px-4 py-2 rounded-lg bg-indigo-600/50 text-indigo-300 text-sm font-semibold cursor-not-allowed">
-          Phase 2 Integration
+      </div>
+
+      <!-- Category / Suggestion Pills (matches UX Pilot Reference Image 2) -->
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Verify invoice INV-100 and prepare a payment of ₹5,000 for server hosting."
+          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          FINANCIAL AUDIT
         </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Retrieve and verify invoice INV-100 from vendor Acme Corp."
+          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          INVOICE VERIFY
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Prepare payment of ₹25,000 for approved supplier contract PO-409."
+          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          PREPARE PAYMENT
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Benchmark policy constraints against max transaction limit ₹10,000."
+          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          POLICY BENCHMARK
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Request human supervisor approval for urgent overseas wire transfer of ₹85,000."
+          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          HUMAN-IN-THE-LOOP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architecture Showcase Section: Dark Purple Banner (matches UX Pilot Reference Image 3) -->
+  <div class="rounded-3xl bg-[#0d0726] bg-grid-blueprint-dark p-8 sm:p-12 lg:p-16 text-white text-center relative overflow-hidden border border-black shadow-xl">
+    <!-- Ambient glow behind mascot -->
+    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-[#7c5cfc]/20 blur-3xl pointer-events-none"></div>
+
+    <!-- Badge: Now 2.0 -->
+    <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-mono text-slate-300 mb-6">
+      <span class="h-1.5 w-1.5 rounded-full bg-[#d4f90d]"></span>
+      <span>Now 2.0</span>
+    </div>
+
+    <!-- Section Headline -->
+    <h3 class="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white font-sans max-w-3xl mx-auto leading-tight">
+      USE INDEPENDENT RUBY POLICIES<br/>
+      TO GOVERN YOUR AI AGENTS
+    </h3>
+
+    <p class="mt-3 text-sm sm:text-base text-slate-300 max-w-xl mx-auto font-normal">
+      Enforce budget ceilings, tool allowlists, and human approvals before any execution occurs.
+    </p>
+
+    <!-- Neon Lime Button CTA -->
+    <div class="mt-7 flex justify-center">
+      <a href="#governance-workflow" class="inline-flex items-center space-x-3 px-6 py-3 rounded-lg bg-[#d4f90d] hover:bg-[#c6ec00] text-black font-black text-sm uppercase tracking-wider border border-black shadow-md hover:scale-102 transition duration-150">
+        <%= vaisastram_mascot_svg(classes: "w-5 h-5", variant: :dark) %>
+        <span>Start Governing – AI Proposes, Ruby Decides</span>
+      </a>
+    </div>
+
+    <!-- Interactive Flow Diagram (matches UX Pilot Image 3) -->
+    <div class="mt-12 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6 relative z-10 text-left">
+      <!-- Left Column: Inputs / Planning -->
+      <div class="space-y-3">
+        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div class="p-2 rounded-lg bg-[#7c5cfc]/20 text-[#a855f7]">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-tight">Structured AI Plans</div>
+            <div class="text-[10px] text-slate-400 font-mono">Gemini & Groq Proposals</div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div class="p-2 rounded-lg bg-[#7c5cfc]/20 text-[#a855f7]">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-tight">Default-Deny Policy</div>
+            <div class="text-[10px] text-slate-400 font-mono">Ruby Decision Matrix</div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div class="p-2 rounded-lg bg-[#7c5cfc]/20 text-[#a855f7]">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-tight">Risk Scoring Matrix</div>
+            <div class="text-[10px] text-slate-400 font-mono">Low / Med / High / Critical</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Mascot Box (Lilac square from reference image 3) -->
+      <div class="flex flex-col items-center justify-center p-6">
+        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-[#d6c7ff] flex items-center justify-center shadow-2xl transform hover:rotate-3 transition duration-200">
+          <%= vaisastram_mascot_svg(classes: "w-16 h-16 sm:w-18 sm:h-18", variant: :dark) %>
+        </div>
+        <span class="mt-3 text-[11px] font-mono uppercase tracking-wider text-[#d4f90d]">Ruby Policy Core</span>
+      </div>
+
+      <!-- Right Column: Outputs / Governance -->
+      <div class="space-y-3">
+        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-tight">Human Approval Gate</div>
+            <div class="text-[10px] text-slate-400 font-mono">Financial & Mutating Actions</div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-tight">Sandboxed Tool Runner</div>
+            <div class="text-[10px] text-slate-400 font-mono">Allowlisted Execution Only</div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-tight">PostgreSQL Audit Trail</div>
+            <div class="text-[10px] text-slate-400 font-mono">Tamper-evident logs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unique Features Section with Dashed Blueprint Grid (matches UX Pilot Reference Image 1) -->
+  <div id="governance-workflow" class="border border-dashed border-slate-300 rounded-3xl p-6 sm:p-10 lg:p-12 bg-white/60">
+    <div class="text-center mb-10">
+      <div class="text-xs font-mono uppercase tracking-widest text-slate-500 mb-2">
+        // VAISASTRAM'S UNIQUE FEATURES
+      </div>
+      <h3 class="text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#0d0726] font-sans">
+        GOVERNED AI WORKFLOWS WITH ABSOLUTE CONTROL
+      </h3>
+      <p class="text-xs sm:text-sm text-slate-600 mt-2 max-w-lg mx-auto font-medium">
+        Autonomous multi-step execution governed by independent Ruby policies.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 divide-y lg:divide-y-0 lg:divide-x divide-dashed divide-slate-300">
+      <!-- Feature 1: Policy Engine -->
+      <div class="space-y-4 pt-6 lg:pt-0 lg:pr-8">
+        <span class="inline-block text-[10px] font-mono uppercase px-2.5 py-1 rounded bg-[#f4f3ef] border border-slate-300 text-slate-700">
+          (POLICY ENGINE)
+        </span>
+        <h4 class="text-xl font-black uppercase tracking-tight text-[#0d0726]">
+          EVALUATE RISKS BEFORE EXECUTION
+        </h4>
+        <p class="text-xs text-slate-600 leading-relaxed font-medium">
+          The AI proposes a sequence of actions. Ruby intercepts every proposed step and applies user-defined constraints before any real tool invocation.
+        </p>
+
+        <!-- Interactive Preview Card -->
+        <div class="p-4 rounded-xl bg-[#0d0726] text-white font-mono text-xs space-y-2 border border-slate-900 shadow-sm">
+          <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-white/10 pb-2">
+            <span>policy_rule.rb</span>
+            <span class="text-[#d4f90d]">ACTIVE</span>
+          </div>
+          <div class="text-slate-300 text-[11px] leading-relaxed">
+            <span class="text-[#a855f7]">rule</span> <span class="text-white">"max_payment_ceiling"</span> <span class="text-[#a855f7]">do</span><br/>
+            &nbsp;&nbsp;<span class="text-emerald-400">match</span> action: <span class="text-[#d4f90d]">"prepare_payment"</span><br/>
+            &nbsp;&nbsp;<span class="text-emerald-400">condition</span> { |args| args[:amount] &gt; 10_000 }<br/>
+            &nbsp;&nbsp;<span class="text-rose-400">require_approval!</span> risk: <span class="text-amber-400">:high</span><br/>
+            <span class="text-[#a855f7]">end</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 2: Audit & Approvals -->
+      <div class="space-y-4 pt-6 lg:pt-0 lg:pl-8">
+        <span class="inline-block text-[10px] font-mono uppercase px-2.5 py-1 rounded bg-[#f4f3ef] border border-slate-300 text-slate-700">
+          (HUMAN IN THE LOOP)
+        </span>
+        <h4 class="text-xl font-black uppercase tracking-tight text-[#0d0726]">
+          SYNC APPROVALS WITH AUDIT LOGS
+        </h4>
+        <p class="text-xs text-slate-600 leading-relaxed font-medium">
+          When sensitive or mutating tools are requested, execution automatically halts. Operators inspect payload arguments and verify with single-click approval.
+        </p>
+
+        <!-- Interactive Preview Card -->
+        <div class="p-4 rounded-xl bg-white border border-slate-300 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-900">Step #3: prepare_payment</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">WAITING APPROVAL</span>
+          </div>
+          <div class="text-[11px] font-mono text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            { "invoice_id": "INV-100", "amount": 25000, "vendor": "Acme Corp" }
+          </div>
+          <div class="flex items-center space-x-2 pt-1">
+            <button type="button" class="px-3 py-1 rounded-md bg-[#d4f90d] text-black text-xs font-bold uppercase border border-black shadow-2xs">
+              Approve
+            </button>
+            <button type="button" class="px-3 py-1 rounded-md bg-white text-rose-700 text-xs font-bold uppercase border border-rose-300">
+              Reject
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

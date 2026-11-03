@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="h-full bg-slate-950 text-slate-100">
+<html class="h-full bg-[#f4f3ef] text-slate-900">
   <head>
     <title><%= content_for(:title) || "VAISASTRAM — Governed Autonomous AI Agent Platform" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -18,69 +18,24 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="min-h-full flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
-    <!-- Header / Global Governance Navigation -->
-    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur border-b border-slate-800">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-          <!-- Logo & Core Principle -->
-          <div class="flex items-center space-x-4">
-            <%= link_to root_path, class: "flex items-center space-x-3 group" do %>
-              <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:opacity-90 transition">
-                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div>
-                <div class="flex items-center space-x-2">
-                  <span class="text-lg font-bold tracking-wider text-white font-mono">VAISASTRAM</span>
-                  <span class="text-[10px] tracking-widest uppercase font-semibold px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">Gov-Ops</span>
-                </div>
-                <div class="text-[11px] text-slate-400">AI proposes · Ruby decides</div>
-              </div>
-            <% end %>
-          </div>
-
-          <!-- Navigation Links -->
-          <% if user_signed_in? %>
-            <nav class="hidden md:flex items-center space-x-1">
-              <%= nav_link_to "Dashboard", dashboard_path %>
-              <%= nav_link_to "Agent Workspace", workspace_path %>
-              <%= nav_link_to "Approval Center", approvals_path %>
-              <%= nav_link_to "Policy Center", policies_path %>
-              <%= nav_link_to "Audit Center", audit_path %>
-              <%= nav_link_to "Evaluation Center", evaluations_path %>
-            </nav>
-          <% end %>
-
-          <!-- User Session / Controls -->
-          <div class="flex items-center space-x-3">
-            <% if user_signed_in? && current_user %>
-              <div class="hidden sm:flex flex-col text-right">
-                <span class="text-xs font-semibold text-slate-200"><%= current_user.name %></span>
-                <span class="text-[10px] text-slate-400 uppercase tracking-wider"><%= current_user.role %></span>
-              </div>
-              <div class="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 uppercase">
-                <%= current_user.name.first(2) %>
-              </div>
-              <%= button_to destroy_user_session_path, method: :delete, class: "text-xs px-2.5 py-1.5 rounded bg-slate-800 hover:bg-rose-950 hover:text-rose-300 hover:border-rose-800 border border-slate-700 text-slate-300 transition cursor-pointer" do %>
-                Sign out
-              <% end %>
-            <% else %>
-              <%= link_to "Register", new_user_registration_path, class: "text-xs font-medium px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700" %>
-              <%= link_to "Sign In", new_user_session_path, class: "text-xs font-medium px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition shadow" %>
-            <% end %>
+  <body class="min-h-full flex flex-col font-sans antialiased selection:bg-[#d4f90d] selection:text-black bg-[#f4f3ef]">
+    <% if devise_controller? %>
+      <!-- Clean full-screen auth layout (split-screen) -->
+      <% if alert = flash[:alert] %>
+        <div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div class="flex items-center space-x-2 p-3 text-xs rounded-lg bg-rose-50 border border-rose-300 text-rose-900 shadow-lg">
+            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span><%= alert %></span>
           </div>
         </div>
-      </div>
-    </header>
+      <% end %>
 
-    <!-- Global Notice / Alert Banners -->
-    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
       <% if notice = flash[:notice] %>
-        <div class="flex items-center justify-between p-3.5 mb-4 text-sm rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-200 shadow-sm" role="alert">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div class="flex items-center space-x-2 p-3 text-xs rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 shadow-lg">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
             <span><%= notice %></span>
@@ -88,41 +43,112 @@
         </div>
       <% end %>
 
-      <% if alert = flash[:alert] %>
-        <div class="flex items-center justify-between p-3.5 mb-4 text-sm rounded-lg bg-rose-950/80 border border-rose-800 text-rose-200 shadow-sm" role="alert">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-rose-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            <span><%= alert %></span>
+      <%= yield %>
+    <% else %>
+      <!-- Standard Governed Application Layout (matches UX Pilot Reference Style) -->
+      <header class="sticky top-0 z-50 bg-[#f4f3ef]/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+            <!-- Brand & Mascot Logo -->
+            <div class="flex items-center space-x-6">
+              <%= link_to root_path, class: "flex items-center space-x-2.5 group" do %>
+                <%= vaisastram_mascot_svg(classes: "w-8 h-8", variant: :dark) %>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-lg font-black tracking-tight text-[#0d0726] font-sans">VAISASTRAM</span>
+                    <span class="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded bg-[#0d0726] text-white">2.0</span>
+                  </div>
+                  <div class="text-[10px] font-mono text-slate-500">AI proposes · Ruby decides</div>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Central Navigation Links -->
+            <% if user_signed_in? %>
+              <nav class="hidden md:flex items-center space-x-1">
+                <%= nav_link_to "Dashboard", dashboard_path %>
+                <%= nav_link_to "Agent Workspace", workspace_path %>
+                <%= nav_link_to "Approval Center", approvals_path %>
+                <%= nav_link_to "Policy Center", policies_path %>
+                <%= nav_link_to "Audit Center", audit_path %>
+                <%= nav_link_to "Evaluation Center", evaluations_path %>
+              </nav>
+            <% end %>
+
+            <!-- User Session / Controls -->
+            <div class="flex items-center space-x-3">
+              <% if user_signed_in? && current_user %>
+                <div class="hidden sm:flex flex-col text-right">
+                  <span class="text-xs font-bold text-[#0d0726]"><%= current_user.name %></span>
+                  <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider"><%= current_user.role %></span>
+                </div>
+                <div class="h-8 w-8 rounded-full bg-[#0d0726] text-[#d4f90d] flex items-center justify-center text-xs font-mono font-bold uppercase shadow-xs">
+                  <%= current_user.name.first(2) %>
+                </div>
+                <%= button_to destroy_user_session_path, method: :delete, class: "text-xs font-semibold px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 transition cursor-pointer shadow-2xs" do %>
+                  Sign out
+                <% end %>
+              <% else %>
+                <%= link_to "Login", new_user_session_path, class: "text-xs font-bold px-3 py-1.5 text-slate-800 hover:text-black transition" %>
+                <%= link_to "Sign up", new_user_registration_path, class: "text-xs font-bold px-4 py-2 rounded-lg bg-[#0d0726] hover:bg-black text-white transition shadow-sm" %>
+              <% end %>
+            </div>
           </div>
         </div>
-      <% end %>
-    </div>
+      </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
-      <%= yield %>
-    </main>
+      <!-- Global Notice / Alert Banners -->
+      <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
+        <% if notice = flash[:notice] %>
+          <div class="flex items-center justify-between p-3.5 mb-4 text-xs font-medium rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 shadow-2xs" role="alert">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span><%= notice %></span>
+            </div>
+          </div>
+        <% end %>
 
-    <!-- Professional Governance Footer -->
-    <footer class="mt-auto border-t border-slate-800/80 bg-slate-900/60 py-5 text-xs text-slate-400">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="flex items-center space-x-3">
-          <span class="font-mono font-semibold text-slate-300">VAISASTRAM</span>
-          <span class="text-slate-600">|</span>
-          <span>Policy-Enforced Autonomous AI Agent Runtime</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">v1.0.0-phase1</span>
-        </div>
-        <div class="flex items-center space-x-6 text-[11px] text-slate-400">
-          <span class="flex items-center space-x-1.5">
-            <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Policy Guard: <strong class="text-slate-200">Enforcing</strong></span>
-          </span>
-          <span>Engine: <strong class="text-slate-200">Ruby 3.4.6 / Rails 8.1</strong></span>
-          <span>DB: <strong class="text-slate-200">PostgreSQL</strong></span>
-        </div>
+        <% if alert = flash[:alert] %>
+          <div class="flex items-center justify-between p-3.5 mb-4 text-xs font-medium rounded-lg bg-rose-50 border border-rose-300 text-rose-900 shadow-2xs" role="alert">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              <span><%= alert %></span>
+            </div>
+          </div>
+        <% end %>
       </div>
-    </footer>
+
+      <!-- Main Content Area with Retro-Tech Blueprint Grid -->
+      <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+        <%= yield %>
+      </main>
+
+      <!-- Professional Governance Footer -->
+      <footer class="mt-auto border-t border-slate-200 bg-[#eae8e1] py-6 text-xs text-slate-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2">
+              <%= vaisastram_mascot_svg(classes: "w-5 h-5", variant: :dark) %>
+              <span class="font-sans font-black text-slate-900">VAISASTRAM</span>
+            </div>
+            <span class="text-slate-400">|</span>
+            <span class="text-slate-600 font-medium">Policy-Enforced Autonomous AI Agent Runtime</span>
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-white text-slate-800 border border-slate-300">v2.0</span>
+          </div>
+          <div class="flex items-center space-x-6 text-[11px] font-mono text-slate-600">
+            <span class="flex items-center space-x-1.5">
+              <span class="h-2 w-2 rounded-full bg-[#d4f90d] border border-black animate-pulse"></span>
+              <span>Policy Guard: <strong class="text-slate-900">Enforcing</strong></span>
+            </span>
+            <span>Engine: <strong class="text-slate-900">Ruby 3.4.6 / Rails 8.1</strong></span>
+            <span>DB: <strong class="text-slate-900">PostgreSQL</strong></span>
+          </div>
+        </div>
+      </footer>
+    <% end %>
   </body>
 </html>

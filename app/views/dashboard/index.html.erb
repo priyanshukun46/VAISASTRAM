@@ -1,112 +1,108 @@
 <div class="space-y-8">
   <!-- Top Welcome & Philosophy Banner -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 shadow-xl">
-    <div>
-      <div class="flex items-center space-x-2">
-        <h1 class="text-2xl font-bold tracking-tight text-white font-mono">Governance Operations Console</h1>
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 sm:p-8 rounded-2xl bg-[#0d0726] bg-grid-blueprint-dark border border-black shadow-xl text-white relative overflow-hidden">
+    <div class="relative z-10">
+      <div class="flex items-center space-x-3 mb-2">
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white font-sans">Governance Operations Console</h1>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-[#d4f90d] text-black border border-black shadow-xs">
           ● ENFORCING
         </span>
       </div>
-      <p class="text-sm text-slate-400 mt-1">
+      <p class="text-xs sm:text-sm text-slate-300 max-w-2xl font-normal">
         Autonomous agents propose multi-step plans. Independent Ruby policy engine validates, authorises, or blocks every action.
       </p>
     </div>
-    <div class="flex items-center space-x-3 shrink-0">
-      <%= link_to workspace_path, class: "inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-md shadow-indigo-600/30 transition" do %>
+    <div class="flex items-center space-x-3 shrink-0 relative z-10">
+      <%= link_to workspace_path, class: "inline-flex items-center space-x-2 px-4 py-2.5 rounded-lg bg-[#d4f90d] hover:bg-[#c6ec00] text-black text-xs font-black uppercase tracking-wider border border-black shadow-sm transition" do %>
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
         </svg>
         <span>Submit Task</span>
       <% end %>
-      <%= link_to approvals_path, class: "inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold border border-slate-700 transition" do %>
-        <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+      <%= link_to approvals_path, class: "inline-flex items-center space-x-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider border border-white/20 transition backdrop-blur-sm" do %>
+        <span class="h-2 w-2 rounded-full bg-amber-400"></span>
         <span>Approvals (<%= @metrics[:pending_approvals] %>)</span>
       <% end %>
     </div>
   </div>
 
-  <!-- Key Metrics Row -->
+  <!-- Key Metrics Row (Clean Retro-Tech Cards) -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
     <!-- Total Agents -->
-    <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-xs hover:shadow-sm transition">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Registered Agents</span>
-        <div class="p-2 rounded-lg bg-slate-800 text-slate-300">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
+        <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-semibold">Registered Agents</span>
+        <div class="p-2 rounded-lg bg-[#0d0726] text-white">
+          <%= vaisastram_mascot_svg(classes: "w-4 h-4", variant: :light) %>
         </div>
       </div>
       <div class="mt-4 flex items-baseline space-x-2">
-        <span class="text-3xl font-bold font-mono text-white"><%= @metrics[:total_agents] %></span>
-        <span class="text-xs text-slate-400">configured</span>
+        <span class="text-3xl font-black font-sans text-[#0d0726]"><%= @metrics[:total_agents] %></span>
+        <span class="text-xs text-slate-500 font-medium">configured</span>
       </div>
-      <div class="mt-3 text-xs text-slate-400 flex items-center space-x-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+      <div class="mt-3 text-xs text-slate-500 flex items-center space-x-1.5 font-medium">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
         <span>Allowlisted agents only</span>
       </div>
     </div>
 
     <!-- Active Tasks -->
-    <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-xs hover:shadow-sm transition">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Tasks</span>
-        <div class="p-2 rounded-lg bg-indigo-950 text-indigo-400">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-semibold">Active Tasks</span>
+        <div class="p-2 rounded-lg bg-[#7c5cfc]/15 text-[#7c5cfc]">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
       </div>
       <div class="mt-4 flex items-baseline space-x-2">
-        <span class="text-3xl font-bold font-mono text-white"><%= @metrics[:active_tasks] %></span>
-        <span class="text-xs text-slate-400">in execution</span>
+        <span class="text-3xl font-black font-sans text-[#0d0726]"><%= @metrics[:active_tasks] %></span>
+        <span class="text-xs text-slate-500 font-medium">in execution</span>
       </div>
-      <div class="mt-3 text-xs text-slate-400 flex items-center space-x-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>
+      <div class="mt-3 text-xs text-slate-500 flex items-center space-x-1.5 font-medium">
+        <span class="h-2 w-2 rounded-full bg-[#7c5cfc]"></span>
         <span>Solid Queue managed</span>
       </div>
     </div>
 
     <!-- Pending Approvals -->
-    <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-xs hover:shadow-sm transition">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending Approvals</span>
-        <div class="p-2 rounded-lg bg-amber-950 text-amber-400">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-semibold">Pending Approvals</span>
+        <div class="p-2 rounded-lg bg-amber-100 text-amber-800">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
       </div>
       <div class="mt-4 flex items-baseline space-x-2">
-        <span class="text-3xl font-bold font-mono text-amber-300"><%= @metrics[:pending_approvals] %></span>
-        <span class="text-xs text-slate-400">awaiting human decision</span>
+        <span class="text-3xl font-black font-sans text-amber-700"><%= @metrics[:pending_approvals] %></span>
+        <span class="text-xs text-slate-500 font-medium">awaiting signature</span>
       </div>
-      <div class="mt-3 text-xs text-slate-400 flex items-center space-x-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
-        <span>Zero unauthorized executions</span>
+      <div class="mt-3 text-xs text-slate-500 flex items-center space-x-1.5 font-medium">
+        <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+        <span>Zero unverified executions</span>
       </div>
     </div>
 
     <!-- Blocked Actions -->
-    <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-xs hover:shadow-sm transition">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Blocked Actions</span>
-        <div class="p-2 rounded-lg bg-rose-950 text-rose-400">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-semibold">Blocked Actions</span>
+        <div class="p-2 rounded-lg bg-rose-100 text-rose-800">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
           </svg>
         </div>
       </div>
       <div class="mt-4 flex items-baseline space-x-2">
-        <span class="text-3xl font-bold font-mono text-rose-400"><%= @metrics[:blocked_actions] %></span>
-        <span class="text-xs text-slate-400">intercepted by policy</span>
+        <span class="text-3xl font-black font-sans text-rose-700"><%= @metrics[:blocked_actions] %></span>
+        <span class="text-xs text-slate-500 font-medium">intercepted by policy</span>
       </div>
-      <div class="mt-3 text-xs text-slate-400 flex items-center space-x-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-rose-400"></span>
-        <span>Explicit deny & spending guards</span>
+      <div class="mt-3 text-xs text-slate-500 flex items-center space-x-1.5 font-medium">
+        <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+        <span>Explicit deny guards</span>
       </div>
     </div>
   </div>
@@ -114,54 +110,54 @@
   <!-- Operational & Security Architecture Matrix -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Security & Policy Architecture Card -->
-    <div class="lg:col-span-2 p-6 rounded-xl bg-slate-900 border border-slate-800 shadow-lg space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+    <div class="lg:col-span-2 p-6 sm:p-8 rounded-2xl bg-white border border-slate-300 shadow-xs space-y-4">
+      <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-4">
         <div>
-          <h2 class="text-base font-semibold text-white">Security & Governance Runtime</h2>
-          <p class="text-xs text-slate-400">Strict isolation between AI planning and system execution</p>
+          <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Security & Governance Runtime</h2>
+          <p class="text-xs text-slate-600 font-medium mt-0.5">Strict isolation between AI planning and system execution</p>
         </div>
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-indigo-950 text-indigo-300 border border-indigo-800">
+        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-mono font-bold bg-[#0d0726] text-white">
           DEFAULT-DENY
         </span>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-          <div class="text-xs font-semibold text-slate-300 flex items-center space-x-2">
-            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+        <div class="p-4 rounded-xl bg-[#f4f3ef] border border-slate-200">
+          <div class="text-xs font-bold text-slate-900 flex items-center space-x-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
             <span>Policy Evaluation Engine</span>
           </div>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+          <p class="text-xs text-slate-600 mt-2 leading-relaxed font-medium">
             Independent Ruby engine intercepts every action proposal. Verifies permissions, evaluates spending thresholds (&gt; ₹10k auto-blocked), and enforces human sign-off for financial mutations.
           </p>
         </div>
 
-        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-          <div class="text-xs font-semibold text-slate-300 flex items-center space-x-2">
-            <span class="h-2 w-2 rounded-full bg-indigo-400"></span>
+        <div class="p-4 rounded-xl bg-[#f4f3ef] border border-slate-200">
+          <div class="text-xs font-bold text-slate-900 flex items-center space-x-2">
+            <span class="h-2 w-2 rounded-full bg-[#7c5cfc]"></span>
             <span>Tool Allowlist Registry</span>
           </div>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-            AI has no access to shell, database, or network. Every executable capability is defined as a strongly-typed Ruby tool with strict argument schema validation.
+          <p class="text-xs text-slate-600 mt-2 leading-relaxed font-medium">
+            AI has no direct access to shell, database, or network. Every executable capability is defined as a strongly-typed Ruby tool with strict argument schema validation.
           </p>
         </div>
 
-        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-          <div class="text-xs font-semibold text-slate-300 flex items-center space-x-2">
-            <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+        <div class="p-4 rounded-xl bg-[#f4f3ef] border border-slate-200">
+          <div class="text-xs font-bold text-slate-900 flex items-center space-x-2">
+            <span class="h-2 w-2 rounded-full bg-amber-500"></span>
             <span>Cryptographic Argument Binding</span>
           </div>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+          <p class="text-xs text-slate-600 mt-2 leading-relaxed font-medium">
             Approvals are bound to the exact tool name and parameter hash. Any tampering or argument mutation automatically revokes approval and requires revalidation.
           </p>
         </div>
 
-        <div class="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-          <div class="text-xs font-semibold text-slate-300 flex items-center space-x-2">
-            <span class="h-2 w-2 rounded-full bg-blue-400"></span>
+        <div class="p-4 rounded-xl bg-[#f4f3ef] border border-slate-200">
+          <div class="text-xs font-bold text-slate-900 flex items-center space-x-2">
+            <span class="h-2 w-2 rounded-full bg-blue-500"></span>
             <span>Tamper-Resistant Audit Trail</span>
           </div>
-          <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+          <p class="text-xs text-slate-600 mt-2 leading-relaxed font-medium">
             Every step—from raw AI proposal to policy decision, approval timestamps, and tool outputs—is recorded immutably in PostgreSQL.
           </p>
         </div>
@@ -169,72 +165,74 @@
     </div>
 
     <!-- System Status & Model Providers Card -->
-    <div class="p-6 rounded-xl bg-slate-900 border border-slate-800 shadow-lg space-y-4">
-      <h2 class="text-base font-semibold text-white border-b border-slate-800 pb-4">Runtime Infrastructure</h2>
+    <div class="p-6 sm:p-8 rounded-2xl bg-white border border-slate-300 shadow-xs space-y-4">
+      <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726] border-b border-dashed border-slate-200 pb-4">
+        Runtime Infrastructure
+      </h2>
       
-      <div class="space-y-3.5 text-xs">
-        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800">
+      <div class="space-y-3 text-xs">
+        <div class="flex items-center justify-between p-3 rounded-xl bg-[#f4f3ef] border border-slate-200">
           <div>
-            <div class="font-medium text-slate-200">Primary AI Engine</div>
-            <div class="text-slate-500 text-[11px]">Gemini 2.5 Pro (Structured JSON)</div>
+            <div class="font-bold text-slate-900">Primary AI Engine</div>
+            <div class="text-slate-500 text-[11px] font-mono">Gemini 2.5 Pro (JSON Mode)</div>
           </div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">Ready</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#d4f90d] text-black border border-black">Ready</span>
         </div>
 
-        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800">
+        <div class="flex items-center justify-between p-3 rounded-xl bg-[#f4f3ef] border border-slate-200">
           <div>
-            <div class="font-medium text-slate-200">Fallback AI Engine</div>
-            <div class="text-slate-500 text-[11px]">Groq (Llama-3.3-70b-versatile)</div>
+            <div class="font-bold text-slate-900">Fallback AI Engine</div>
+            <div class="text-slate-500 text-[11px] font-mono">Groq (Llama-3.3-70b)</div>
           </div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">Standby</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-200 text-slate-700">Standby</span>
         </div>
 
-        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800">
+        <div class="flex items-center justify-between p-3 rounded-xl bg-[#f4f3ef] border border-slate-200">
           <div>
-            <div class="font-medium text-slate-200">Asynchronous Queue</div>
-            <div class="text-slate-500 text-[11px]">Solid Queue on PostgreSQL</div>
+            <div class="font-bold text-slate-900">Asynchronous Queue</div>
+            <div class="text-slate-500 text-[11px] font-mono">Solid Queue on PostgreSQL</div>
           </div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">Active</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">Active</span>
         </div>
 
-        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800">
+        <div class="flex items-center justify-between p-3 rounded-xl bg-[#f4f3ef] border border-slate-200">
           <div>
-            <div class="font-medium text-slate-200">Real-Time Streams</div>
-            <div class="text-slate-500 text-[11px]">Solid Cable / Turbo Streams</div>
+            <div class="font-bold text-slate-900">Real-Time Streams</div>
+            <div class="text-slate-500 text-[11px] font-mono">Solid Cable / Turbo Streams</div>
           </div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">Active</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">Active</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Recent Executions & Demonstration Teaser -->
-  <div class="p-6 rounded-xl bg-slate-900 border border-slate-800 shadow-lg">
-    <div class="flex items-center justify-between mb-4">
+  <!-- Recent Executions Section -->
+  <div class="p-6 sm:p-8 rounded-2xl bg-white border border-slate-300 shadow-xs">
+    <div class="flex items-center justify-between mb-4 border-b border-dashed border-slate-200 pb-4">
       <div>
-        <h2 class="text-base font-semibold text-white">Execution Activity Log</h2>
-        <p class="text-xs text-slate-400">Step-by-step proposals and policy decisions</p>
+        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Execution Activity Log</h2>
+        <p class="text-xs text-slate-600 font-medium mt-0.5">Step-by-step proposals, policy decisions, and audit records</p>
       </div>
-      <%= link_to "View Complete Audit →", audit_path, class: "text-xs font-medium text-indigo-400 hover:text-indigo-300 transition" %>
+      <%= link_to "View Complete Audit →", audit_path, class: "text-xs font-bold text-[#7c5cfc] hover:underline" %>
     </div>
 
     <% if @recent_executions.empty? %>
-      <div class="text-center py-12 border border-dashed border-slate-800 rounded-lg bg-slate-950/50">
-        <div class="inline-flex h-12 w-12 rounded-full bg-slate-800 items-center justify-center text-slate-400 mb-3">
+      <div class="text-center py-12 border border-dashed border-slate-300 rounded-xl bg-[#f4f3ef]/50">
+        <div class="inline-flex h-12 w-12 rounded-full bg-slate-200 items-center justify-center text-slate-500 mb-3">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
         </div>
-        <h3 class="text-sm font-semibold text-slate-300">No executions recorded yet</h3>
-        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-          Phase 1 foundation is operational. Go to Agent Workspace to submit tasks such as "Verify invoice INV-100 and prepare a payment of ₹5,000".
+        <h3 class="text-sm font-bold text-slate-800">No executions recorded yet</h3>
+        <p class="text-xs text-slate-600 max-w-sm mx-auto mt-1 font-medium">
+          Agent runtime is operational. Visit Agent Workspace to submit tasks such as "Verify invoice INV-100 and prepare a payment of ₹5,000".
         </p>
         <div class="mt-4">
-          <%= link_to "Open Agent Workspace", workspace_path, class: "inline-flex items-center px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow" %>
+          <%= link_to "Open Agent Workspace", workspace_path, class: "inline-flex items-center px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider bg-[#0d0726] hover:bg-black text-white transition shadow-sm" %>
         </div>
       </div>
     <% else %>
-      <!-- Rendered executions list will go here in Phase 2 -->
+      <!-- Executions table -->
     <% end %>
   </div>
 </div>

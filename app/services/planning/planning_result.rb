@@ -50,5 +50,25 @@ module Planning
     def error_message
       @error.is_a?(Exception) ? @error.message : @error.to_s
     end
+
+    def response_text
+      @plan["response"].presence || @plan["summary"].presence || "Plan prepared."
+    end
+
+    def requires_action?
+      @plan["requires_action"] == true
+    end
+
+    def clarification_needed?
+      @plan["clarification_needed"].present?
+    end
+
+    def clarification_needed
+      @plan["clarification_needed"]
+    end
+
+    def explanation
+      @plan["explanation"]
+    end
   end
 end
