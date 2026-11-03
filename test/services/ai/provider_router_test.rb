@@ -61,31 +61,40 @@ class AiProviderRouterTest < ActiveSupport::TestCase
     router = Ai::ProviderRouter.new(primary_provider: primary, fallback_provider: fallback)
     response = router.generate("Test prompt")
 
-    assert_equal 1, primary.calls
+    assert_equal 2, primary.calls # 1 initial + 1 bounded retry
     assert_equal 1, fallback.calls
     assert_equal "groq", response.provider
     assert response.fallback?
 
     # Verify audit of attempts
-    assert_equal 2, router.attempts.size
-    assert_equal :failed, router.attempts.first[:status]
-    assert_equal "gemini", router.attempts.first[:provider]
-    assert_equal "Ai::Errors::RateLimitError", router.attempts.first[:error_class]
+    assert_equal 3, router.attempts.size # 2 primary attempts + 1 fallback
+    assert_equal :failed, router.attempts[0][:status]
+    assert_equal "gemini", router.attempts[0][:provider]
+    assert_equal "Ai::Errors::RateLimitError", router.attempts[0][:error_class]
 
-    assert_equal :success, router.attempts.second[:status]
-    assert_equal "groq", router.attempts.second[:provider]
+    assert_equal :failed, router.attempts[1][:status]
+    assert_equal "gemini", router.attempts[1][:provider]
+
+    assert_equal :success, router.attempts[2][:status]
+    assert_equal "groq", router.attempts[2][:provider]
   end
 
-  test "falls back to secondary provider on connection timeout" do
-    timeout_err = Ai::TimeoutError.new("Gemini timed out", provider: "gemini")
+  test "Gemini timeout triggers bounded retry then falls back to Groq successfully" do
+    timeout_err = Ai::TimeoutError.new("Gemini timed out after 30s", provider: "gemini")
     primary = FailingProvider.new("gemini", timeout_err)
     fallback = MockProvider.new("groq")
 
     router = Ai::ProviderRouter.new(primary_provider: primary, fallback_provider: fallback)
-    response = router.generate("Test prompt")
+    response = router.generate("Test prompt", system_instruction: "Gov rules", schema: { required: ["status"] })
 
+    assert_equal 2, primary.calls # 1 initial attempt + 1 bounded retry
+    assert_equal 1, fallback.calls
     assert_equal "groq", response.provider
     assert response.fallback?
+    assert_equal 3, router.attempts.size
+    assert_equal :failed, router.attempts[0][:status]
+    assert_equal :failed, router.attempts[1][:status]
+    assert_equal :success, router.attempts[2][:status]
   end
 
   test "does NOT fallback on fatal authentication error (fails fast)" do
@@ -134,8 +143,9 @@ class AiProviderRouterTest < ActiveSupport::TestCase
     end
 
     assert_includes error.message, "All AI providers failed"
-    assert_equal 2, error.attempts.size
-    assert_equal "gemini", error.attempts.first[:provider]
-    assert_equal "groq", error.attempts.second[:provider]
+    assert_equal 3, error.attempts.size # 2 gemini attempts + 1 groq
+    assert_equal "gemini", error.attempts[0][:provider]
+    assert_equal "gemini", error.attempts[1][:provider]
+    assert_equal "groq", error.attempts[2][:provider]
   end
 end

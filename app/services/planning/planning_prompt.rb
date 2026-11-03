@@ -27,6 +27,25 @@ module Planning
         AVAILABLE TOOLS:
         #{tools_description}
 
+        REQUIRED JSON OUTPUT STRUCTURE:
+        You must return a single JSON object with these exact top-level fields:
+        {
+          "goal": "Concise statement of the goal or topic",
+          "response": "Short, human-readable response for the chat interface",
+          "steps": [
+            {
+              "step_number": 1,
+              "action": "allowlisted_tool_key",
+              "arguments": { "param_name": "param_value" },
+              "description": "Brief description of why this step is proposed"
+            }
+          ]
+        }
+        - "goal" is REQUIRED (string).
+        - "response" is REQUIRED (string). Prospective language only; never state actions have already completed.
+        - "steps" is REQUIRED (array). Empty [] if clarification needed or request cannot be planned.
+        - Optional fields: "requires_action" (boolean), "clarification_needed" (string), "explanation" (string).
+
         STRICT PLANNING RULES:
         1. Propose ONLY actions from the available tools list above.
         2. Never invent tool names, external URLs, shell commands, SQL queries, or arbitrary code.

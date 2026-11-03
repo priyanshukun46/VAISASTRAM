@@ -5,6 +5,7 @@ class PlanValidatorTest < ActiveSupport::TestCase
     @allowed_tools = %w[lookup_invoice verify_invoice prepare_payment]
     @valid_plan = {
       "goal" => "Verify invoice INV-100 and prepare payment",
+      "response" => "I will verify invoice INV-100 and prepare a payment voucher for approval.",
       "summary" => "Retrieve and verify the invoice before preparing payment.",
       "steps" => [
         {
@@ -34,7 +35,7 @@ class PlanValidatorTest < ActiveSupport::TestCase
   end
 
   test "rejects missing required top-level fields" do
-    %w[goal summary steps].each do |field|
+    %w[goal response steps].each do |field|
       invalid = @valid_plan.except(field)
       err = assert_raises(Planning::ValidationError) do
         Planning::PlanValidator.validate!(invalid, allowed_tools: @allowed_tools)

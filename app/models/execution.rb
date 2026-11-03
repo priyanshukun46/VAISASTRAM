@@ -59,7 +59,29 @@ class Execution < ApplicationRecord
   end
 
   def ai_response_text
-    plan["response"].presence || plan["summary"].presence || "Plan prepared."
+    return nil if failed?
+    plan["response"].presence || plan["summary"].presence
+  end
+
+  def error_category
+    return nil unless failed?
+
+    msg = error_message.to_s
+    if msg.include?("All AI providers failed") || msg.include?("AllProvidersFailed")
+      "ALL_PROVIDERS_FAILED"
+    elsif msg.include?("timed out") || msg.include?("Timeout")
+      "PROVIDER_TIMEOUT"
+    elsif msg.include?("ValidationError") || msg.include?("Missing required field") || msg.include?("invalid type") || msg.include?("not valid JSON")
+      "SCHEMA_VALIDATION_ERROR"
+    elsif msg.include?("Authentication") || msg.include?("401") || msg.include?("403")
+      "AUTHENTICATION_ERROR"
+    elsif msg.include?("Rate limit") || msg.include?("429")
+      "RATE_LIMIT_ERROR"
+    elsif msg.include?("Malicious") || msg.include?("falsely implies")
+      "POLICY_VIOLATION"
+    else
+      "PLANNING_ERROR"
+    end
   end
 
   def requires_action?

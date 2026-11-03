@@ -70,7 +70,7 @@ module Planning
             }
           }
         },
-        required: ["goal", "summary", "steps"]
+        required: ["goal", "response", "steps"]
       }
 
       if available_tools.present?

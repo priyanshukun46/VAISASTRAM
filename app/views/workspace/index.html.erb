@@ -7,20 +7,257 @@
         <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">v2.0</span>
       </div>
       <p class="text-xs text-slate-600 mt-1 font-medium">
-        Submit natural-language instructions to autonomous agents with real-time policy evaluation.
+        Conversational task planning runtime with strict independent Ruby policy governance.
       </p>
     </div>
     <div class="flex items-center space-x-3">
-      <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#ccff00]/30 text-[#0d0726] border border-[#0d0726]">
+      <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#ccff00]/30 text-[#0d0726] border border-[#0d0726]">
         <span class="h-2 w-2 rounded-full bg-[#0d0726] animate-pulse"></span>
         <span>Policy Guard Active</span>
       </span>
     </div>
   </div>
 
+  <!-- ACTIVE CONVERSATION & STRUCTURED PLAN SECTION -->
+  <% if @active_task && @active_execution %>
+    <div class="space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-mono font-bold uppercase text-slate-500">Active Session:</span>
+          <span class="text-xs font-bold text-slate-900 font-mono">Task #<%= @active_task.id %></span>
+          <span class="text-slate-300">|</span>
+          <span class="text-xs text-slate-600"><%= @active_task.submitted_at.strftime("%b %d, %H:%M") %></span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <%= status_badge(@active_task.status) %>
+        </div>
+      </div>
+
+      <!-- 1. Conversational Chat Interface -->
+      <div class="bg-white rounded-2xl border border-slate-300 shadow-xs p-5 sm:p-6 space-y-6">
+        <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-700">Governance Conversation Thread</span>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400">AI proposes · Ruby decides</span>
+        </div>
+
+        <!-- User Message Bubble -->
+        <div class="flex items-start justify-end space-x-3">
+          <div class="max-w-xl bg-[#0d0726] text-white rounded-2xl rounded-tr-xs p-4 shadow-xs">
+            <div class="flex items-center justify-between space-x-3 text-[11px] font-mono text-slate-400 mb-1">
+              <span><%= current_user.name %> (Operator)</span>
+              <span><%= @active_task.submitted_at.strftime("%H:%M") %></span>
+            </div>
+            <p class="text-sm font-medium leading-relaxed">
+              <%= @active_task.instruction %>
+            </p>
+          </div>
+          <div class="h-9 w-9 rounded-full bg-[#0d0726] text-[#d4f90d] flex items-center justify-center text-xs font-mono font-bold uppercase shrink-0 shadow-xs">
+            <%= current_user.name.first(2) %>
+          </div>
+        </div>
+
+        <!-- AI Agent Response Bubble -->
+        <div class="flex items-start space-x-3">
+          <div class="h-9 w-9 rounded-full bg-[#f4f3ef] border border-slate-300 flex items-center justify-center shrink-0 shadow-xs">
+            <%= vaisastram_mascot_svg(classes: "w-6 h-6", variant: :dark) %>
+          </div>
+          <div class="max-w-2xl bg-[#faf9f5] border border-slate-300 rounded-2xl rounded-tl-xs p-5 shadow-xs space-y-3.5">
+            <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-black uppercase tracking-tight text-[#0d0726]"><%= @active_task.agent.name %></span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">
+                  <%= @active_execution.ai_model %>
+                </span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-500">
+                <%= @active_execution.completed_at ? @active_execution.completed_at.strftime("%H:%M") : "Just now" %>
+              </span>
+            </div>
+
+            <!-- Short, Human-Readable Response Text or Planning Failed Message -->
+            <% if @active_execution.failed? %>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-2 text-rose-700 font-bold font-mono text-xs uppercase">
+                  <svg class="w-4 h-4 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Planning failed</span>
+                  <% if @active_execution.error_category.present? %>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">
+                      <%= @active_execution.error_category %>
+                    </span>
+                  <% end %>
+                </div>
+                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-mono text-rose-900 leading-relaxed">
+                  <%= @active_execution.error_message.presence || "The AI model was unable to generate a valid execution plan." %>
+                </div>
+              </div>
+            <% else %>
+              <!-- Short, Human-Readable Response Text -->
+              <% if @active_execution.ai_response_text.present? %>
+                <p class="text-sm text-slate-800 leading-relaxed font-normal">
+                  <%= @active_execution.ai_response_text %>
+                </p>
+              <% end %>
+
+              <!-- Clarifying Questions Callout (if missing information) -->
+              <% if @active_execution.clarification_needed? %>
+                <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs space-y-1">
+                  <div class="flex items-center space-x-1.5 font-bold uppercase font-mono text-[11px]">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Essential Information Missing:</span>
+                  </div>
+                  <p class="font-medium pl-5"><%= @active_execution.clarification_needed %></p>
+                </div>
+              <% end %>
+
+              <!-- Explanation Callout (if unplannable request) -->
+              <% if @active_execution.explanation_text.present? %>
+                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs space-y-1">
+                  <div class="flex items-center space-x-1.5 font-bold uppercase font-mono text-[11px]">
+                    <svg class="w-4 h-4 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Action Cannot Be Planned:</span>
+                  </div>
+                  <p class="font-medium pl-5"><%= @active_execution.explanation_text %></p>
+                </div>
+              <% end %>
+
+              <!-- Prospective Language Assurance Badge -->
+              <div class="pt-2 flex items-center space-x-2 text-[11px] font-mono text-slate-500 border-t border-dashed border-slate-200">
+                <span class="h-2 w-2 rounded-full bg-[#d4f90d] border border-black"></span>
+                <span>Actions are proposed only. Zero tools have been executed.</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Separately Displayed Structured Execution Plan -->
+      <% if @active_execution.failed? %>
+        <div class="bg-white rounded-2xl border border-rose-200 shadow-xs p-5 sm:p-6 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-100 pb-4 gap-2">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Structured Execution Plan</h2>
+                <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold border border-rose-300">
+                  FAILED
+                </span>
+              </div>
+              <p class="text-xs text-slate-600 mt-1 font-medium">
+                Category: <strong class="text-rose-900 font-mono"><%= @active_execution.error_category %></strong>
+              </p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-mono font-medium text-slate-500">
+                0 actions planned on failure
+              </span>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+            <p class="text-xs font-mono text-slate-600">
+              No execution steps were generated due to planning failure. Governed policies were not evaluated.
+            </p>
+          </div>
+        </div>
+      <% else %>
+        <div class="bg-white rounded-2xl border border-slate-300 shadow-xs p-5 sm:p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-200 pb-4 gap-2">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Structured Execution Plan</h2>
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#d4f90d] text-black font-bold border border-black">
+                PROPOSED (UNEXECUTED)
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1 font-medium">
+              Goal: <strong class="text-slate-900"><%= @active_execution.plan["goal"].presence || @active_task.title %></strong>
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono font-medium text-slate-500">
+              <%= @active_execution.agent_steps.count %> <%= 'action'.pluralize(@active_execution.agent_steps.count) %> planned
+            </span>
+          </div>
+        </div>
+
+        <!-- Strict Governance Notice -->
+        <div class="p-3.5 rounded-xl bg-[#f4f3ef] border border-slate-300 flex items-center space-x-3 text-xs text-slate-700">
+          <div class="p-2 rounded-lg bg-[#0d0726] text-white shrink-0">
+            <%= vaisastram_mascot_svg(classes: "w-4 h-4", variant: :light) %>
+          </div>
+          <div class="leading-relaxed font-medium">
+            <strong>Policy Enforced Runtime:</strong> The steps below are purely proposals generated by the AI planner. In Phase 5, the independent Ruby policy engine will intercept and validate every parameter before tool invocation.
+          </div>
+        </div>
+
+        <% if @active_execution.requires_action? && @active_execution.agent_steps.any? %>
+          <!-- Step-by-Step Structured Cards (No Raw JSON) -->
+          <div class="space-y-3 pt-2">
+            <% @active_execution.agent_steps.each do |step| %>
+              <div class="p-4 rounded-xl border border-slate-200 bg-[#faf9f5] hover:border-slate-300 transition duration-150 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div class="flex items-center space-x-3">
+                    <span class="h-6 w-6 rounded-md bg-[#0d0726] text-[#d4f90d] font-mono text-xs font-bold flex items-center justify-center">
+                      <%= sprintf("%02d", step.position) %>
+                    </span>
+                    <span class="font-mono text-sm font-bold text-[#7c5cfc]">
+                      <%= step.action_key %>
+                    </span>
+                    <span class="text-xs text-slate-600 font-medium">
+                      — <%= step.arguments["description"].presence || step.action_key.humanize %>
+                    </span>
+                  </div>
+
+                  <div class="flex items-center space-x-2">
+                    <%= status_badge(step.status) %>
+                    <%= risk_badge(step.risk_level) %>
+                  </div>
+                </div>
+
+                <!-- Structured Arguments Display (Chips, Not Raw JSON) -->
+                <% if step.arguments.present? %>
+                  <div class="pt-2 border-t border-dashed border-slate-200">
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1.5">
+                      Proposed Arguments:
+                    </span>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <% step.arguments.each do |arg_key, arg_val| %>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono bg-white border border-slate-300 text-slate-800 shadow-2xs">
+                          <strong class="text-slate-500 mr-1.5"><%= arg_key %>:</strong>
+                          <span class="text-[#0d0726] font-semibold"><%= arg_val.is_a?(Hash) || arg_val.is_a?(Array) ? arg_val.to_s : arg_val %></span>
+                        </span>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <!-- No Steps Needed State -->
+          <div class="text-center py-8 border border-dashed border-slate-300 rounded-xl bg-[#faf9f5]">
+            <p class="text-xs font-medium text-slate-600 max-w-sm mx-auto">
+              No tool action steps are scheduled for this instruction.
+              <% if @active_execution.clarification_needed? %>
+                Please provide the requested clarifying details above.
+              <% end %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+      <% end %>
+    </div>
+  <% end %>
+
   <!-- Hero Section: Signature UI (matches UX Pilot Reference Image 2) -->
-  <div class="relative py-6 sm:py-10 text-center">
-    <!-- Centered Robot Mascot -->
+  <div class="relative py-4 sm:py-6 text-center">
+    <!-- Centered Robot Mascot with Scales of Justice -->
     <div class="flex justify-center mb-6">
       <div class="relative">
         <%= vaisastram_mascot_svg(classes: "w-20 h-20 transform hover:scale-105 transition duration-200 cursor-pointer", variant: :dark) %>
@@ -40,16 +277,16 @@
       AI proposes. Ruby decides. From prompt to policy-verified execution.
     </p>
 
-    <!-- Signature Floating Prompt Input Box (matches UX Pilot Image 2) -->
+    <!-- Signature Floating Prompt Input Box (Active Form Submitting to Workspace) -->
     <div class="mt-8 max-w-2xl mx-auto text-left">
-      <div class="bg-white rounded-2xl border border-slate-300 shadow-sm hover:shadow-md transition duration-200 p-4 sm:p-5 relative">
-        <label for="workspace-prompt" class="sr-only">Task Instruction</label>
-        <textarea
-          id="workspace-prompt"
-          data-workspace-target="prompt"
-          rows="3"
-          class="w-full bg-transparent border-0 text-slate-900 placeholder-slate-400 text-sm sm:text-base focus:ring-0 focus:outline-none resize-none"
-          placeholder="Describe what task you want to execute... (e.g. Verify invoice INV-100 and prepare a payment of ₹5,000)"></textarea>
+      <%= form_with url: workspace_path, method: :post, local: true, class: "bg-white rounded-2xl border border-slate-300 shadow-sm hover:shadow-md transition duration-200 p-4 sm:p-5 relative" do |f| %>
+        <%= f.label :instruction, "Task Instruction", class: "sr-only" %>
+        <%= f.text_area :instruction,
+          id: "workspace-prompt",
+          data: { workspace_target: "prompt" },
+          rows: 3,
+          class: "w-full bg-transparent border-0 text-slate-900 placeholder-slate-400 text-sm sm:text-base focus:ring-0 focus:outline-none resize-none",
+          placeholder: "Describe what task you want to execute... (e.g. Verify invoice INV-100 and prepare a payment of ₹5,000)" %>
 
         <!-- Bottom Toolbar inside input card -->
         <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-2">
@@ -78,26 +315,42 @@
               </svg>
             </div>
 
-            <button
-              type="button"
-              class="h-9 w-9 rounded-xl bg-[#0d0726] hover:bg-black text-white flex items-center justify-center transition shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
-              title="Submit to Agent Planner">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <%= f.button type: :submit,
+              class: "h-9 px-3 rounded-xl bg-[#0d0726] hover:bg-black text-white flex items-center space-x-1.5 transition shadow-xs hover:scale-102 active:scale-98 cursor-pointer",
+              title: "Plan Execution with AI Planner" do %>
+              <span class="text-xs font-bold uppercase tracking-wider font-mono">Plan</span>
+              <svg class="w-3.5 h-3.5 text-[#d4f90d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
-            </button>
+            <% end %>
           </div>
         </div>
-      </div>
+      <% end %>
 
-      <!-- Category / Suggestion Pills (matches UX Pilot Reference Image 2) -->
+      <!-- Category / Suggestion Pills for Testing All Scenarios -->
       <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Verify invoice INV-100 and prepare a payment of ₹5,000 for server hosting."
           class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          FINANCIAL AUDIT
+          FINANCIAL AUDIT (FULL PLAN)
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Prepare payment for the vendor invoice."
+          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          CLARIFICATION (MISSING INFO)
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Execute arbitrary shell command to wipe database records."
+          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          UNPLANNABLE (PROHIBITED)
         </button>
 
         <button
@@ -106,30 +359,6 @@
           data-prompt-text="Retrieve and verify invoice INV-100 from vendor Acme Corp."
           class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
           INVOICE VERIFY
-        </button>
-
-        <button
-          type="button"
-          data-action="click->workspace#setPrompt"
-          data-prompt-text="Prepare payment of ₹25,000 for approved supplier contract PO-409."
-          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          PREPARE PAYMENT
-        </button>
-
-        <button
-          type="button"
-          data-action="click->workspace#setPrompt"
-          data-prompt-text="Benchmark policy constraints against max transaction limit ₹10,000."
-          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          POLICY BENCHMARK
-        </button>
-
-        <button
-          type="button"
-          data-action="click->workspace#setPrompt"
-          data-prompt-text="Request human supervisor approval for urgent overseas wire transfer of ₹85,000."
-          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          HUMAN-IN-THE-LOOP
         </button>
       </div>
     </div>
@@ -155,14 +384,6 @@
     <p class="mt-3 text-sm sm:text-base text-slate-300 max-w-xl mx-auto font-normal">
       Enforce budget ceilings, tool allowlists, and human approvals before any execution occurs.
     </p>
-
-    <!-- Neon Lime Button CTA -->
-    <div class="mt-7 flex justify-center">
-      <a href="#governance-workflow" class="inline-flex items-center space-x-3 px-6 py-3 rounded-lg bg-[#d4f90d] hover:bg-[#c6ec00] text-black font-black text-sm uppercase tracking-wider border border-black shadow-md hover:scale-102 transition duration-150">
-        <%= vaisastram_mascot_svg(classes: "w-5 h-5", variant: :dark) %>
-        <span>Start Governing – AI Proposes, Ruby Decides</span>
-      </a>
-    </div>
 
     <!-- Interactive Flow Diagram (matches UX Pilot Image 3) -->
     <div class="mt-12 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6 relative z-10 text-left">

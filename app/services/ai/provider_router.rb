@@ -1,10 +1,15 @@
 module Ai
   class ProviderRouter
-    attr_reader :primary_provider, :fallback_provider, :attempts
+    DEFAULT_MAX_RETRIES = 1
+    DEFAULT_RETRY_DELAY = 0.05
 
-    def initialize(primary_provider: nil, fallback_provider: nil)
+    attr_reader :primary_provider, :fallback_provider, :attempts, :max_retries, :retry_delay
+
+    def initialize(primary_provider: nil, fallback_provider: nil, max_retries: DEFAULT_MAX_RETRIES, retry_delay: DEFAULT_RETRY_DELAY)
       @primary_provider = primary_provider || Ai::GeminiProvider.new
       @fallback_provider = fallback_provider || Ai::GroqProvider.new
+      @max_retries = max_retries
+      @retry_delay = retry_delay
       @attempts = []
     end
 
@@ -16,27 +21,41 @@ module Ai
       @attempts = []
       expected_schema = options[:schema]
 
-      # 1. Attempt Primary Provider (Gemini)
-      begin
-        response = execute_provider(@primary_provider, prompt, options, fallback_used: false)
-        validate_and_return!(response, expected_schema)
-      rescue Ai::TransientError => e
-        record_failure(@primary_provider, e)
-        Rails.logger.warn("[AI ProviderRouter] Primary provider #{@primary_provider.provider_name} encountered transient error: #{e.message}. Initiating fallback to #{@fallback_provider.provider_name}...")
+      # 1. Attempt Primary Provider with Bounded Retries on Transient Errors
+      primary_retries = 0
+      last_primary_error = nil
 
-        # 2. Attempt Fallback Provider (Groq)
+      loop do
         begin
-          response = execute_provider(@fallback_provider, prompt, options, fallback_used: true)
-          validate_and_return!(response, expected_schema)
-        rescue Ai::Error => fallback_err
-          record_failure(@fallback_provider, fallback_err)
-          Rails.logger.error("[AI ProviderRouter] Fallback provider #{@fallback_provider.provider_name} also failed: #{fallback_err.message}")
+          response = execute_provider(@primary_provider, prompt, options, fallback_used: false)
+          return validate_and_return!(response, expected_schema)
+        rescue Ai::TransientError => e
+          last_primary_error = e
+          record_failure(@primary_provider, e)
 
-          raise Ai::AllProvidersFailedError.new(
-            "All AI providers failed. Primary (#{@primary_provider.provider_name}): #{e.message}; Fallback (#{@fallback_provider.provider_name}): #{fallback_err.message}",
-            attempts: @attempts
-          )
+          if primary_retries < @max_retries
+            primary_retries += 1
+            Rails.logger.warn("[AI ProviderRouter] Primary provider #{@primary_provider.provider_name} transient error: #{e.message}. Retrying (#{primary_retries}/#{@max_retries})...")
+            sleep(@retry_delay) if @retry_delay.positive?
+          else
+            Rails.logger.warn("[AI ProviderRouter] Primary provider #{@primary_provider.provider_name} failed after #{primary_retries} retries: #{e.message}. Initiating fallback to #{@fallback_provider.provider_name}...")
+            break
+          end
         end
+      end
+
+      # 2. Attempt Fallback Provider (Groq) with Identical Logical Request
+      begin
+        response = execute_provider(@fallback_provider, prompt, options, fallback_used: true)
+        validate_and_return!(response, expected_schema)
+      rescue Ai::Error => fallback_err
+        record_failure(@fallback_provider, fallback_err)
+        Rails.logger.error("[AI ProviderRouter] Fallback provider #{@fallback_provider.provider_name} also failed: #{fallback_err.message}")
+
+        raise Ai::AllProvidersFailedError.new(
+          "All AI providers failed. Primary (#{@primary_provider.provider_name}): #{last_primary_error&.message}; Fallback (#{@fallback_provider.provider_name}): #{fallback_err.message}",
+          attempts: @attempts
+        )
       end
     end
 

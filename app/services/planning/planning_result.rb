@@ -52,7 +52,8 @@ module Planning
     end
 
     def response_text
-      @plan["response"].presence || @plan["summary"].presence || "Plan prepared."
+      return nil if failure?
+      @plan["response"].presence || @plan["summary"].presence
     end
 
     def requires_action?

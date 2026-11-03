@@ -6,7 +6,8 @@ module Planning
 
     def normalize(plan_data)
       goal = (plan_data["goal"] || plan_data[:goal]).to_s.strip
-      summary = (plan_data["summary"] || plan_data[:summary]).to_s.strip
+      response_text = (plan_data["response"] || plan_data[:response]).to_s.strip
+      summary = (plan_data["summary"] || plan_data[:summary]).to_s.strip.presence || response_text
       raw_steps = plan_data["steps"] || plan_data[:steps] || []
 
       requires_action = if plan_data.key?("requires_action")
@@ -15,15 +16,6 @@ module Planning
         ActiveModel::Type::Boolean.new.cast(plan_data[:requires_action])
       else
         raw_steps.any?
-      end
-
-      response_text = (plan_data["response"] || plan_data[:response]).to_s.strip
-      if response_text.empty?
-        response_text = if requires_action && raw_steps.any?
-          "I have proposed an execution plan with #{raw_steps.size} #{'step'.pluralize(raw_steps.size)} to #{goal.downcase}. These actions are submitted for Ruby policy evaluation before any execution."
-        else
-          summary.presence || "I have received your instruction."
-        end
       end
 
       normalized_steps = raw_steps.map do |step|

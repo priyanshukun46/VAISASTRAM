@@ -59,12 +59,13 @@ module Ai
     def execute_http_request(prompt, options)
       uri = endpoint_uri
       request = build_http_request(uri, prompt, options)
+      req_timeout = (options[:timeout] || @timeout).to_i
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = (uri.scheme == "https")
-      http.open_timeout = @timeout
-      http.read_timeout = @timeout
-      http.write_timeout = @timeout
+      http.open_timeout = req_timeout
+      http.read_timeout = req_timeout
+      http.write_timeout = req_timeout
 
       response = http.request(request)
       handle_http_errors!(response)

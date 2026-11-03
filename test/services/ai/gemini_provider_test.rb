@@ -105,4 +105,40 @@ class AiGeminiProviderTest < ActiveSupport::TestCase
     resp_500 = Struct.new(:code, :body).new("500", '{"error":{"message":"Internal Error"}}')
     assert_raises(Ai::ServerError) { @provider.send(:handle_http_errors!, resp_500) }
   end
+
+  test "parses JSON wrapped in markdown fences" do
+    fenced_content = "```json\n{\"goal\":\"Process invoice\",\"response\":\"Processing\",\"steps\":[]}\n```"
+    gemini_body = {
+      candidates: [
+        {
+          content: { parts: [{ text: fenced_content }] },
+          finishReason: "STOP"
+        }
+      ]
+    }.to_json
+
+    @provider.mock_response = Struct.new(:code, :body).new("200", gemini_body)
+
+    res = @provider.generate("Plan task")
+    assert_equal "Process invoice", res["goal"]
+    assert_equal "Processing", res["response"]
+  end
+
+  test "raises ValidationError on malformed JSON" do
+    gemini_body = {
+      candidates: [
+        {
+          content: { parts: [{ text: "This is not valid JSON" }] },
+          finishReason: "STOP"
+        }
+      ]
+    }.to_json
+
+    @provider.mock_response = Struct.new(:code, :body).new("200", gemini_body)
+
+    err = assert_raises(Ai::ValidationError) do
+      @provider.generate("Plan task")
+    end
+    assert_includes err.message, "Gemini response is not valid JSON"
+  end
 end

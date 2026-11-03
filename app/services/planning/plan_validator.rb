@@ -23,27 +23,30 @@ module Planning
         raise ValidationError, "Unexpected top-level fields in plan: #{unexpected_keys.join(', ')}"
       end
 
-      # Check required baseline fields
-      %w[goal summary steps].each do |key|
+      # Check required baseline fields (Task 2 unified contract)
+      %w[goal response steps].each do |key|
         unless plan_data.key?(key) || plan_data.key?(key.to_sym)
           raise ValidationError, "Missing required field '#{key}' in plan"
         end
       end
 
-      # Type checks for goal & summary
+      # Type checks for goal & response
       goal = (plan_data["goal"] || plan_data[:goal]).to_s.strip
-      summary = (plan_data["summary"] || plan_data[:summary]).to_s.strip
+      response_text = (plan_data["response"] || plan_data[:response]).to_s.strip
 
       raise ValidationError, "Goal cannot be empty" if goal.empty?
-      raise ValidationError, "Summary cannot be empty" if summary.empty?
+      raise ValidationError, "Response cannot be empty" if response_text.empty?
+
+      # Optional summary check if provided
+      if plan_data.key?("summary") || plan_data.key?(:summary)
+        summary = (plan_data["summary"] || plan_data[:summary]).to_s.strip
+        raise ValidationError, "Summary cannot be empty if provided" if summary.empty?
+      end
 
       # Anti-hallucination: Never imply an action has already been executed
-      response_text = (plan_data["response"] || plan_data[:response]).to_s.strip
-      if response_text.present?
-        FORBIDDEN_COMPLETION_PATTERNS.each do |pattern|
-          if response_text =~ pattern
-            raise ValidationError, "AI response falsely implies actions have already been executed: '#{response_text}'"
-          end
+      FORBIDDEN_COMPLETION_PATTERNS.each do |pattern|
+        if response_text =~ pattern
+          raise ValidationError, "AI response falsely implies actions have already been executed: '#{response_text}'"
         end
       end
 

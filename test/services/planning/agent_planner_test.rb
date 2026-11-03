@@ -51,6 +51,7 @@ class AgentPlannerTest < ActiveSupport::TestCase
 
     @valid_plan_data = {
       "goal" => "Verify invoice INV-100 and prepare payment",
+      "response" => "I will verify invoice INV-100 and prepare a payment voucher for approval.",
       "summary" => "Retrieve, verify, and prepare payment voucher.",
       "steps" => [
         {
@@ -257,5 +258,45 @@ class AgentPlannerTest < ActiveSupport::TestCase
     assert result.failure?
     assert_includes result.error_message, "falsely implies actions have already been executed"
     assert_equal "failed", @task.reload.status
+  end
+
+  test "rejects AI planner response missing required 'goal' field" do
+    missing_goal_plan = @valid_plan_data.except("goal")
+
+    router = MockRouter.new(missing_goal_plan)
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.failure?
+    assert_includes result.error_message, "Missing required field 'goal'"
+    assert_equal "failed", @task.reload.status
+    assert_equal "failed", result.execution.status
+    assert_nil result.response_text
+    assert_nil result.execution.ai_response_text
+    assert_equal "SCHEMA_VALIDATION_ERROR", result.execution.error_category
+  end
+
+  test "rejects AI planner response missing required 'response' field" do
+    missing_response_plan = @valid_plan_data.except("response")
+
+    router = MockRouter.new(missing_response_plan)
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.failure?
+    assert_includes result.error_message, "Missing required field 'response'"
+    assert_equal "failed", @task.reload.status
+    assert_equal "failed", result.execution.status
+    assert_nil result.response_text
+    assert_nil result.execution.ai_response_text
+  end
+
+  test "returns nil for response_text on failed execution and never returns Plan prepared" do
+    failing_router = MockRouter.new(nil, error_to_raise: Ai::TimeoutError.new("Provider timed out after 30 seconds"))
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: failing_router)
+
+    assert result.failure?
+    assert_nil result.response_text
+    assert_nil result.execution.ai_response_text
+    assert_not_equal "Plan prepared.", result.execution.ai_response_text
+    assert_equal "PROVIDER_TIMEOUT", result.execution.error_category
   end
 end

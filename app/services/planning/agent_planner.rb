@@ -2,13 +2,17 @@ module Planning
   class UnauthorizedError < StandardError; end
 
   class AgentPlanner
+    class << self
+      attr_accessor :default_router_override
+    end
+
     attr_reader :task, :user, :agent, :provider_router
 
     def initialize(task:, user:, provider_router: nil)
       @task = task
       @user = user
       @agent = task.agent
-      @provider_router = provider_router || Ai::ProviderRouter.new
+      @provider_router = provider_router || self.class.default_router_override || Ai::ProviderRouter.new
     end
 
     def self.plan(task:, user:, provider_router: nil)

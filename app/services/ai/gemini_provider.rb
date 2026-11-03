@@ -65,9 +65,17 @@ module Ai
         raise Ai::ValidationError.new("Gemini returned an empty content part", provider: provider_name, raw_response: response.body)
       end
 
-      data = JSON.parse(raw_text) rescue nil
-      if data.nil?
-        raise Ai::ValidationError.new("Gemini response is not valid JSON: #{raw_text.truncate(120)}", provider: provider_name, raw_response: raw_text)
+      # Strip Markdown fences if present (e.g. ```json ... ```)
+      cleaned_text = extract_raw_json(raw_text)
+
+      begin
+        data = JSON.parse(cleaned_text)
+      rescue JSON::ParserError => e
+        raise Ai::ValidationError.new("Gemini response is not valid JSON: #{e.message.truncate(80)}", provider: provider_name, raw_response: raw_text)
+      end
+
+      unless data.is_a?(Hash)
+        raise Ai::ValidationError.new("Gemini response must be a JSON object, got #{data.class.name}", provider: provider_name, raw_response: raw_text)
       end
 
       metadata = {
@@ -83,6 +91,17 @@ module Ai
         duration_ms: duration_ms,
         metadata: metadata
       )
+    end
+
+    private
+
+    def extract_raw_json(text)
+      trimmed = text.to_s.strip
+      if trimmed.start_with?("```")
+        trimmed = trimmed.sub(/\A```(?:json)?\s*\n?/i, "")
+        trimmed = trimmed.sub(/\n?```\s*\z/, "")
+      end
+      trimmed.strip
     end
   end
 end
