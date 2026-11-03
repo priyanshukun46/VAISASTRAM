@@ -1,0 +1,66 @@
+<tr id="<%= dom_id(policy) %>" class="hover:bg-slate-50/80 transition <%= 'opacity-60 bg-slate-50/50' unless policy.enabled? %>">
+  <td class="py-3.5 px-5 font-mono text-xs font-bold text-slate-500">
+    #<%= policy.priority %>
+  </td>
+  <td class="py-3.5 px-5 font-mono font-bold <%= policy.action_key.include?('delete') ? 'text-rose-700' : 'text-[#7c5cfc]' %>">
+    <%= policy.action_key %>
+  </td>
+  <td class="py-3.5 px-5">
+    <div class="font-bold text-slate-900"><%= policy.name %></div>
+    <div class="text-[11px] text-slate-500 font-normal"><%= policy.description %></div>
+  </td>
+  <td class="py-3.5 px-5 font-mono text-[11px] text-slate-600">
+    <% if policy.conditions.present? && policy.conditions.any? %>
+      <div class="flex flex-wrap gap-1">
+        <% policy.conditions.each do |k, v| %>
+          <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">
+            <%= k %>: <strong><%= v %></strong>
+          </span>
+        <% end %>
+      </div>
+    <% else %>
+      <span class="text-slate-400 italic">None (Unconditional)</span>
+    <% end %>
+  </td>
+  <td class="py-3.5 px-5">
+    <% case policy.effect %>
+    <% when "allow" %>
+      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+        ALLOW
+      </span>
+    <% when "require_approval" %>
+      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
+        REQUIRE APPROVAL
+      </span>
+    <% when "deny" %>
+      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">
+        DENY
+      </span>
+    <% end %>
+  </td>
+  <td class="py-3.5 px-5">
+    <div class="flex items-center space-x-2">
+      <% if policy.enabled? %>
+        <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+          <span>ENABLED</span>
+        </span>
+      <% else %>
+        <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200">
+          <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+          <span>DISABLED</span>
+        </span>
+      <% end %>
+
+      <% if current_user.admin? %>
+        <% if PoliciesController::CRITICAL_ACTION_KEYS.include?(policy.action_key) %>
+          <span class="text-[10px] font-mono text-slate-400" title="Locked by system security">(Protected)</span>
+        <% else %>
+          <%= button_to toggle_policy_path(policy), method: :patch, class: "text-[11px] font-mono font-medium text-slate-600 hover:text-black hover:underline cursor-pointer bg-transparent border-0 p-0" do %>
+            <%= policy.enabled? ? "Disable" : "Enable" %>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </td>
+</tr>

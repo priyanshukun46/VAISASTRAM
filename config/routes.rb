@@ -19,8 +19,19 @@ Rails.application.routes.draw do
   # Protected navigation routes
   get "workspace", to: "workspace#index", as: :workspace
   post "workspace", to: "workspace#create"
-  get "approvals", to: "approvals#index", as: :approvals
+
+  # Human-in-the-Loop Approval Center
+  resources :approvals, only: [:index, :show] do
+    member do
+      patch :approve
+      post :approve
+      patch :reject
+      post :reject
+    end
+  end
+
   get "policies", to: "policies#index", as: :policies
+  patch "policies/:id/toggle", to: "policies#toggle", as: :toggle_policy
   get "audit", to: "audit#index", as: :audit
   get "evaluations", to: "evaluations#index", as: :evaluations
 end

@@ -1,4 +1,5 @@
-<div class="space-y-6">
+<div class="space-y-8">
+  <!-- Top Approval Center Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
     <div>
       <div class="flex items-center space-x-2">
@@ -9,28 +10,161 @@
         Cryptographically signed human-in-the-loop review for sensitive and financial actions proposed by autonomous agents.
       </p>
     </div>
-    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
-      0 Pending Approvals
-    </span>
+    <div class="flex flex-wrap items-center gap-2">
+      <span id="pending_count_badge" class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
+        <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+        <span><%= @pending_count %> Pending Approvals</span>
+      </span>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-mono bg-slate-100 text-slate-700 border border-slate-300">
+        Segregation of Duties Enforced
+      </span>
+    </div>
   </div>
 
-  <div class="text-center py-16 border border-dashed border-slate-300 rounded-2xl bg-white shadow-2xs p-6">
-    <div class="inline-flex h-14 w-14 rounded-2xl bg-[#f4f3ef] border border-slate-200 items-center justify-center text-slate-600 mb-4 shadow-2xs">
-      <svg class="w-7 h-7 text-[#0d0726]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
+  <!-- Core Mandate Banner -->
+  <div class="p-4 rounded-2xl bg-[#0d0726] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm border border-black">
+    <div class="flex items-center space-x-3">
+      <div class="p-2 rounded-xl bg-white/10 text-[#d4f90d] shrink-0">
+        <%= vaisastram_mascot_svg(classes: "w-6 h-6", variant: :light) %>
+      </div>
+      <div>
+        <div class="text-xs font-black uppercase tracking-wider text-[#d4f90d]">AI Proposes · Ruby Decides · Humans Approve Sensitive Actions</div>
+        <div class="text-xs text-slate-300 font-normal">
+          AI agents cannot execute sensitive financial disbursements or destructive operations without explicit human authorization.
+        </div>
+      </div>
     </div>
-    <h3 class="text-base font-black uppercase tracking-tight text-[#0d0726]">No approval requests pending</h3>
-    <p class="text-xs text-slate-600 max-w-md mx-auto mt-2 leading-relaxed font-medium">
-      Sensitive actions (such as high-value payouts or destructive operations) will pause and appear here for operator signature before execution.
-    </p>
-    <div class="mt-6">
-      <%= link_to workspace_path, class: "inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0d0726] hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition shadow-sm" do %>
-        <span>Delegate Task in Workspace</span>
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+    <div class="text-right font-mono text-[11px] text-slate-400">
+      Default Expiration: 30 minutes
+    </div>
+  </div>
+
+  <!-- Filter Navigation Tabs -->
+  <div class="flex items-center space-x-2 border-b border-slate-200 pb-3 font-mono text-xs overflow-x-auto">
+    <%= link_to approvals_path(status: "pending"), class: "px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 #{@status_filter == 'pending' ? 'bg-[#0d0726] text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}" do %>
+      <span>Pending</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] <%= @status_filter == 'pending' ? 'bg-[#d4f90d] text-black font-black' : 'bg-slate-100 text-slate-600' %>"><%= @pending_count %></span>
+    <% end %>
+
+    <%= link_to approvals_path(status: "approved"), class: "px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 #{@status_filter == 'approved' ? 'bg-[#0d0726] text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}" do %>
+      <span>Approved</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] <%= @status_filter == 'approved' ? 'bg-[#d4f90d] text-black font-black' : 'bg-slate-100 text-slate-600' %>"><%= @approved_count %></span>
+    <% end %>
+
+    <%= link_to approvals_path(status: "rejected"), class: "px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 #{@status_filter == 'rejected' ? 'bg-[#0d0726] text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}" do %>
+      <span>Rejected</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] <%= @status_filter == 'rejected' ? 'bg-[#d4f90d] text-black font-black' : 'bg-slate-100 text-slate-600' %>"><%= @rejected_count %></span>
+    <% end %>
+
+    <%= link_to approvals_path(status: "expired"), class: "px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 #{@status_filter == 'expired' ? 'bg-[#0d0726] text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}" do %>
+      <span>Expired</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] <%= @status_filter == 'expired' ? 'bg-[#d4f90d] text-black font-black' : 'bg-slate-100 text-slate-600' %>"><%= @expired_count %></span>
+    <% end %>
+
+    <%= link_to approvals_path(status: "all"), class: "px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 #{@status_filter == 'all' ? 'bg-[#0d0726] text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}" do %>
+      <span>All Records</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] <%= @status_filter == 'all' ? 'bg-[#d4f90d] text-black font-black' : 'bg-slate-100 text-slate-600' %>"><%= @total_count %></span>
+    <% end %>
+  </div>
+
+  <!-- Approvals Cards Stream -->
+  <div id="approvals_list" class="space-y-4">
+    <% if @approvals.any? %>
+      <% @approvals.each do |approval| %>
+        <%= render "approvals/approval_card", approval: approval %>
+      <% end %>
+    <% else %>
+      <div class="text-center py-16 border border-dashed border-slate-300 rounded-2xl bg-white shadow-2xs p-6">
+        <div class="inline-flex h-14 w-14 rounded-2xl bg-[#f4f3ef] border border-slate-200 items-center justify-center text-slate-600 mb-4 shadow-2xs">
+          <svg class="w-7 h-7 text-[#0d0726]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-black uppercase tracking-tight text-[#0d0726]">No approval requests in <%= @status_filter.humanize %></h3>
+        <p class="text-xs text-slate-600 max-w-md mx-auto mt-2 leading-relaxed font-medium">
+          When the Policy Engine flags an autonomous action as REQUIRE_APPROVAL, it pauses immediately and appears here for operator signature.
+        </p>
+        <div class="mt-6">
+          <%= link_to workspace_path, class: "inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#0d0726] hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition shadow-sm" do %>
+            <span>Delegate Task in Workspace</span>
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Recent Approval Audit Trail -->
+  <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-xs">
+    <div class="p-5 sm:p-6 border-b border-dashed border-slate-200 bg-[#faf9f5] flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Recent Human &amp; Approval Audit Trail</h2>
+        <p class="text-xs text-slate-600 font-medium mt-0.5">Immutable record of every approval requested, signed, rejected, or expired.</p>
+      </div>
+      <%= link_to audit_path, class: "text-xs font-mono text-slate-600 hover:text-black font-semibold flex items-center space-x-1" do %>
+        <span>Open Audit Center</span>
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
       <% end %>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+        <thead class="bg-[#f4f3ef] text-slate-700 uppercase tracking-wider font-mono font-bold">
+          <tr>
+            <th class="py-3 px-4">Timestamp</th>
+            <th class="py-3 px-4">Event Type</th>
+            <th class="py-3 px-4">Actor</th>
+            <th class="py-3 px-4">Tool / Action</th>
+            <th class="py-3 px-4">Fingerprint Digest</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 font-mono text-[11px]">
+          <% if @recent_audits.any? %>
+            <% @recent_audits.each do |event| %>
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">
+                  <%= event.occurred_at.strftime("%H:%M:%S") %>
+                </td>
+                <td class="py-3 px-4 font-bold">
+                  <% case event.event_type %>
+                  <% when "approval_requested" %>
+                    <span class="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">approval_requested</span>
+                  <% when "approval_approved" %>
+                    <span class="text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">approval_approved</span>
+                  <% when "approval_rejected" %>
+                    <span class="text-rose-800 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">approval_rejected</span>
+                  <% when "approval_expired" %>
+                    <span class="text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">approval_expired</span>
+                  <% when "approval_consumed", "approval_execution_succeeded" %>
+                    <span class="text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"><%= event.event_type %></span>
+                  <% else %>
+                    <span class="text-slate-700"><%= event.event_type %></span>
+                  <% end %>
+                </td>
+                <td class="py-3 px-4 text-[#0d0726]">
+                  <%= event.actor_type %> (<%= event.actor_id %>)
+                </td>
+                <td class="py-3 px-4 font-bold text-slate-800">
+                  <%= event.metadata["tool_name"] || event.metadata[:tool_name] || "—" %>
+                </td>
+                <td class="py-3 px-4 text-slate-600 truncate max-w-xs" title="<%= event.metadata['action_fingerprint'] %>">
+                  <%= event.metadata["action_fingerprint"] ? event.metadata["action_fingerprint"].first(16) + '...' : '—' %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-500 font-sans">
+                No approval audit records yet.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

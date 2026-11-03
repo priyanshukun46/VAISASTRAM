@@ -7,6 +7,33 @@ lookup_tool:
   input_schema: <%= { type: "object", properties: { invoice_id: { type: "string" } } }.to_json %>
   enabled: true
 
+retrieve_tool:
+  key: "retrieve_invoice"
+  name: "Invoice Retrieval"
+  description: "Fetches invoice details and metadata"
+  risk_level: "low"
+  required_permission: "invoice:read"
+  input_schema: <%= { type: "object", properties: { invoice_id: { type: "string" } } }.to_json %>
+  enabled: true
+
+verify_tool:
+  key: "verify_invoice"
+  name: "Invoice Verification"
+  description: "Verifies invoice calculations"
+  risk_level: "low"
+  required_permission: "invoice:verify"
+  input_schema: <%= { type: "object", properties: { invoice_id: { type: "string" } } }.to_json %>
+  enabled: true
+
+vendor_tool:
+  key: "get_vendor"
+  name: "Vendor Lookup"
+  description: "Retrieves vendor details"
+  risk_level: "low"
+  required_permission: "vendor:read"
+  input_schema: <%= { type: "object", properties: { vendor_id: { type: "string" } } }.to_json %>
+  enabled: true
+
 payment_tool:
   key: "prepare_payment"
   name: "Prepare Payment"
@@ -14,4 +41,22 @@ payment_tool:
   risk_level: "high"
   required_permission: "payment:prepare"
   input_schema: <%= { type: "object", properties: { amount: { type: "number" } } }.to_json %>
+  enabled: true
+
+delete_tool:
+  key: "delete_financial_record"
+  name: "Delete Financial Record"
+  description: "Deletes financial record"
+  risk_level: "critical"
+  required_permission: "admin:delete_records"
+  input_schema: <%= { type: "object", properties: { target: { type: "string" } } }.to_json %>
+  enabled: true
+
+delete_records_tool:
+  key: "delete_records"
+  name: "Delete Records"
+  description: "Deletes records"
+  risk_level: "critical"
+  required_permission: "admin:delete_records"
+  input_schema: <%= { type: "object", properties: { target: { type: "string" } } }.to_json %>
   enabled: true

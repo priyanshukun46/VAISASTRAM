@@ -24,6 +24,18 @@ auditor.save!
 # Seed Allowlisted Tools
 tools_data = [
   {
+    key: "retrieve_invoice",
+    name: "Invoice Retrieval",
+    description: "Fetches invoice details and metadata by reference code.",
+    risk_level: "low",
+    required_permission: "invoice:read",
+    input_schema: {
+      type: "object",
+      properties: { invoice_id: { type: "string", description: "Invoice reference code (e.g. INV-100)" } },
+      required: ["invoice_id"]
+    }
+  },
+  {
     key: "lookup_invoice",
     name: "Invoice Lookup",
     description: "Fetches invoice details and line items by invoice identifier.",
@@ -48,6 +60,18 @@ tools_data = [
     }
   },
   {
+    key: "get_vendor",
+    name: "Vendor Lookup",
+    description: "Retrieves verified vendor details, KYC status, and bank details.",
+    risk_level: "low",
+    required_permission: "vendor:read",
+    input_schema: {
+      type: "object",
+      properties: { vendor_id: { type: "string" } },
+      required: ["vendor_id"]
+    }
+  },
+  {
     key: "prepare_payment",
     name: "Simulated Payment Preparation",
     description: "Generates a pre-approved disbursement voucher for authorized payment.",
@@ -57,6 +81,18 @@ tools_data = [
       type: "object",
       properties: { invoice_id: { type: "string" }, amount: { type: "number" }, currency: { type: "string", default: "INR" } },
       required: ["invoice_id", "amount"]
+    }
+  },
+  {
+    key: "delete_financial_record",
+    name: "Delete Financial Record",
+    description: "Restricted administrative deletion of ledger or tax records.",
+    risk_level: "critical",
+    required_permission: "admin:delete_records",
+    input_schema: {
+      type: "object",
+      properties: { target: { type: "string" } },
+      required: ["target"]
     }
   },
   {
@@ -82,6 +118,15 @@ end
 # Seed Initial Governance Policies
 policies_data = [
   {
+    name: "Allow Invoice Retrieval",
+    description: "Permits autonomous retrieval of invoice records and line items.",
+    action_key: "retrieve_invoice",
+    effect: "allow",
+    priority: 10,
+    conditions: {},
+    enabled: true
+  },
+  {
     name: "Allow Invoice Lookup",
     description: "Permits autonomous retrieval of invoice metadata.",
     action_key: "lookup_invoice",
@@ -100,7 +145,16 @@ policies_data = [
     enabled: true
   },
   {
-    name: "Block Excessive Payments",
+    name: "Allow Vendor Lookup",
+    description: "Permits lookup of vendor identity and compliance records.",
+    action_key: "get_vendor",
+    effect: "allow",
+    priority: 15,
+    conditions: {},
+    enabled: true
+  },
+  {
+    name: "Block Excessive Payments (> ₹10,000)",
     description: "Automatically blocks any payment preparation exceeding ₹10,000 threshold.",
     action_key: "prepare_payment",
     effect: "deny",
@@ -109,12 +163,21 @@ policies_data = [
     enabled: true
   },
   {
-    name: "Require Approval for Standard Payment",
+    name: "Require Approval for Standard Payment (<= ₹10,000)",
     description: "Demands human operator signature before preparing payments <= ₹10,000.",
     action_key: "prepare_payment",
     effect: "require_approval",
     priority: 40,
     conditions: { "amount_lte" => 10000 },
+    enabled: true
+  },
+  {
+    name: "Explicitly Block Financial Record Deletion",
+    description: "Hard block on any attempt by an agent to destroy financial records.",
+    action_key: "delete_financial_record",
+    effect: "deny",
+    priority: 1,
+    conditions: {},
     enabled: true
   },
   {

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_014800) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,12 +81,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014800) do
     t.datetime "occurred_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "task_id"
+    t.string "tool_name"
+    t.string "action_fingerprint"
+    t.string "policy_decision"
+    t.string "status"
+    t.string "chain_id"
+    t.integer "sequence_number"
+    t.string "prev_event_hash"
+    t.string "event_hash"
+    t.string "hash_version", default: "v1"
+    t.index ["action_fingerprint"], name: "index_audit_events_on_action_fingerprint"
     t.index ["agent_step_id"], name: "index_audit_events_on_agent_step_id"
     t.index ["approval_id"], name: "index_audit_events_on_approval_id"
+    t.index ["chain_id", "sequence_number"], name: "index_audit_events_on_chain_id_and_sequence_number"
+    t.index ["chain_id"], name: "index_audit_events_on_chain_id"
+    t.index ["event_hash"], name: "index_audit_events_on_event_hash"
     t.index ["event_type"], name: "index_audit_events_on_event_type"
     t.index ["execution_id", "occurred_at"], name: "index_audit_events_on_execution_and_occurred_at"
     t.index ["execution_id"], name: "index_audit_events_on_execution_id"
     t.index ["occurred_at"], name: "index_audit_events_on_occurred_at"
+    t.index ["policy_decision"], name: "index_audit_events_on_policy_decision"
+    t.index ["status"], name: "index_audit_events_on_status"
+    t.index ["task_id", "occurred_at"], name: "index_audit_events_on_task_id_and_occurred_at"
+    t.index ["task_id"], name: "index_audit_events_on_task_id"
+    t.index ["tool_name"], name: "index_audit_events_on_tool_name"
     t.index ["user_id"], name: "index_audit_events_on_user_id"
     t.check_constraint "actor_type::text = ANY (ARRAY['user'::character varying, 'agent'::character varying, 'policy_engine'::character varying, 'system'::character varying]::text[])", name: "check_audit_events_actor_type"
   end
@@ -192,6 +211,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014800) do
   add_foreign_key "audit_events", "agent_steps", on_delete: :nullify
   add_foreign_key "audit_events", "approvals", on_delete: :nullify
   add_foreign_key "audit_events", "executions", on_delete: :nullify
+  add_foreign_key "audit_events", "tasks", on_delete: :nullify
   add_foreign_key "audit_events", "users", on_delete: :nullify
   add_foreign_key "executions", "agents", on_delete: :cascade
   add_foreign_key "executions", "tasks", on_delete: :cascade

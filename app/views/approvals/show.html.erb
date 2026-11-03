@@ -1,0 +1,22 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between border-b border-dashed border-slate-300 pb-4">
+    <div class="flex items-center space-x-3">
+      <%= link_to approvals_path, class: "p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-black hover:border-slate-300 transition shadow-2xs" do %>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      <% end %>
+      <div>
+        <h1 class="text-xl font-black tracking-tight text-[#0d0726]">Approval Request #<%= @approval.id %></h1>
+        <p class="text-xs text-slate-600 font-mono">Action: <%= @approval.tool_name %></p>
+      </div>
+    </div>
+    <div>
+      <span class="text-xs font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full <%= @approval.pending? ? 'bg-amber-100 text-amber-900 border border-amber-300' : (@approval.approved? || @approval.executed? ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-slate-100 text-slate-800') %>">
+        Status: <%= @approval.status %>
+      </span>
+    </div>
+  </div>
+
+  <%= render "approvals/approval_card", approval: @approval %>
+</div>

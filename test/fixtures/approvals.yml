@@ -1,6 +1,14 @@
 pending_payment_approval:
   agent_step: step_two
   reviewer: two
+  user: one
+  task: invoice_task
+  execution: invoice_execution
+  tool_name: "prepare_payment"
+  action_arguments: <%= { "invoice_id" => "INV-100", "amount" => 5000 }.to_json %>
   status: "pending"
-  action_digest: <%= Digest::SHA256.hexdigest({ action_key: "prepare_payment", arguments: { invoice_id: "INV-100", amount: 5000 } }.to_json) %>
+  action_digest: "d00ae258892ed53f64d1b5a1e2a8c9c69828f4568062956344f1ff03b111f9e7"
+  action_fingerprint: "d00ae258892ed53f64d1b5a1e2a8c9c69828f4568062956344f1ff03b111f9e7"
+  policy_decision_reference: "payment_approval_threshold"
+  requested_at: <%= 5.minutes.ago %>
   expires_at: <%= 24.hours.from_now %>

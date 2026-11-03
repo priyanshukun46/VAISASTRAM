@@ -50,6 +50,39 @@ class ApprovalTest < ActiveSupport::TestCase
     # Rejected status
     @approval.status = "rejected"
     assert @approval.rejected?
+
+    # Phase 7 statuses
+    @approval.status = "invalidated"
+    assert @approval.invalidated?
+    assert @approval.decided?
+
+    @approval.status = "executed"
+    assert @approval.executed?
+    assert @approval.decided?
+
+    @approval.status = "failed"
+    assert @approval.failed?
+    assert @approval.decided?
+  end
+
+  test "matches_fingerprint? validates against exact parameters" do
+    step = agent_steps(:step_two)
+    approval = Approval.create!(
+      agent_step: step,
+      user: users(:one),
+      task: tasks(:invoice_task),
+      execution: executions(:invoice_execution),
+      tool_name: "prepare_payment",
+      action_arguments: { "invoice_id" => "INV-100", "amount" => 5000 },
+      status: "pending",
+      expires_at: 2.hours.from_now
+    )
+
+    assert approval.matches_fingerprint?
+
+    # Tampering with arguments invalidates fingerprint match
+    approval.action_arguments = { "invoice_id" => "INV-100", "amount" => 9999 }
+    assert_not approval.matches_fingerprint?
   end
 
   test "associations: belongs to agent_step and optional reviewer, through execution and task" do

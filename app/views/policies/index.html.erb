@@ -1,80 +1,182 @@
-<div class="space-y-6">
+<div class="space-y-8">
+  <!-- Top Policy Center Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
     <div>
       <div class="flex items-center space-x-2">
         <h1 class="text-2xl font-black tracking-tight text-[#0d0726] font-sans">Policy Center</h1>
-        <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">RUBY ENGINE</span>
+        <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">INDEPENDENT RUBY ENGINE</span>
       </div>
       <p class="text-xs text-slate-600 mt-1 font-medium">
-        Declarative authorization rules, spending ceilings, risk classification, and allowlist governance.
+        Deterministic Ruby rules, spending ceilings, action fingerprinting, and fail-closed default-deny governance.
       </p>
     </div>
-    <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#ccff00]/30 text-[#0d0726] border border-[#0d0726]">
-      <span class="h-2 w-2 rounded-full bg-[#0d0726] animate-pulse"></span>
-      <span>Default-Deny Policy Active</span>
-    </span>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#ccff00]/30 text-[#0d0726] border border-[#0d0726]">
+        <span class="h-2 w-2 rounded-full bg-[#0d0726] animate-pulse"></span>
+        <span>Default-Deny Enforced</span>
+      </span>
+      <% if @last_evaluation %>
+        <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-mono bg-slate-100 text-slate-700 border border-slate-300" title="Last evaluation timestamp">
+          <span>Last Eval:</span>
+          <strong><%= @last_evaluation.occurred_at.strftime("%H:%M:%S") %></strong>
+        </span>
+      <% end %>
+    </div>
   </div>
 
+  <!-- Core Mandate Banner -->
+  <div class="p-4 rounded-2xl bg-[#0d0726] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm border border-black">
+    <div class="flex items-center space-x-3">
+      <div class="p-2 rounded-xl bg-white/10 text-[#d4f90d] shrink-0">
+        <%= vaisastram_mascot_svg(classes: "w-6 h-6", variant: :light) %>
+      </div>
+      <div>
+        <div class="text-xs font-black uppercase tracking-wider text-[#d4f90d]">AI Proposes. Ruby Decides.</div>
+        <div class="text-xs text-slate-300 font-normal">
+          The Policy Engine operates completely independently of LLM responses and ignores all AI-generated risk labels.
+        </div>
+      </div>
+    </div>
+    <div class="text-right font-mono text-[11px] text-slate-400">
+      Precedence: DENY &gt; REQUIRE_APPROVAL &gt; ALLOW
+    </div>
+  </div>
+
+  <!-- 1. Active Database Policies -->
   <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-xs">
-    <div class="p-5 sm:p-6 border-b border-dashed border-slate-200 bg-[#faf9f5]">
-      <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Active Governance Policies</h2>
-      <p class="text-xs text-slate-600 font-medium mt-0.5">Independent Ruby evaluation applied prior to any tool dispatch.</p>
+    <div class="p-5 sm:p-6 border-b border-dashed border-slate-200 bg-[#faf9f5] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div>
+        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Active Governance Policies</h2>
+        <p class="text-xs text-slate-600 font-medium mt-0.5">Declarative rules evaluated prior to any tool execution.</p>
+      </div>
+      <div class="text-xs font-mono text-slate-500">
+        <%= @system_policies.count %> system <%= 'policy'.pluralize(@system_policies.count) %> configured
+      </div>
     </div>
 
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
         <thead class="bg-[#f4f3ef] text-slate-700 uppercase tracking-wider font-mono font-bold">
           <tr>
-            <th class="py-3.5 px-5">Action / Tool</th>
-            <th class="py-3.5 px-5">Policy Rule</th>
-            <th class="py-3.5 px-5">Risk Level</th>
+            <th class="py-3.5 px-5">Priority</th>
+            <th class="py-3.5 px-5">Tool Scope</th>
+            <th class="py-3.5 px-5">Policy Name & Purpose</th>
             <th class="py-3.5 px-5">Conditions</th>
             <th class="py-3.5 px-5">Decision</th>
+            <th class="py-3.5 px-5">Status</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-slate-800">
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3.5 px-5 font-mono font-bold text-[#7c5cfc]">lookup_invoice</td>
-            <td class="py-3.5 px-5 font-medium">Read invoice details</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-900 border border-blue-300">LOW</span></td>
-            <td class="py-3.5 px-5 text-slate-600 font-mono">Read-only tool allowlisted</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">ALLOW</span></td>
+          <% if @system_policies.any? %>
+            <% @system_policies.each do |policy| %>
+              <%= render partial: "policies/policy_row", locals: { policy: policy } %>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="6" class="py-6 text-center text-slate-500 font-mono">
+                No system policies found. Run `bin/rails db:seed` to load default policies.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. Deterministic Code Engine Rules Showcase -->
+  <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-xs">
+    <div class="p-5 sm:p-6 border-b border-dashed border-slate-200 bg-[#faf9f5]">
+      <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Built-in Hardened Engine Rules</h2>
+      <p class="text-xs text-slate-600 font-medium mt-0.5">Immutable Ruby code rules enforcing safety guards, permissions, and spending ceilings.</p>
+    </div>
+
+    <div class="divide-y divide-slate-100">
+      <% @code_rules.each do |rule| %>
+        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 transition">
+          <div class="flex items-start space-x-3">
+            <span class="mt-0.5 h-6 w-12 rounded bg-slate-100 border border-slate-300 text-slate-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+              P<%= rule.priority %>
+            </span>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-black uppercase text-slate-900"><%= rule.name %></span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600"><%= rule.rule_id %></span>
+              </div>
+              <p class="text-xs text-slate-600 mt-0.5"><%= rule.description %></p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              IMMUTABLE
+            </span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 3. Recent Policy Decisions Audit Stream -->
+  <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-xs">
+    <div class="p-5 sm:p-6 border-b border-dashed border-slate-200 bg-[#faf9f5] flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Recent Policy Decisions (Audit Log)</h2>
+        <p class="text-xs text-slate-600 font-medium mt-0.5">Immutable cryptographic audit trail of all evaluations performed by the Ruby Policy Engine.</p>
+      </div>
+      <%= link_to "View Full Audit Stream →", audit_path, class: "text-xs font-bold font-mono text-[#7c5cfc] hover:underline" %>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+        <thead class="bg-[#f4f3ef] text-slate-700 uppercase tracking-wider font-mono font-bold">
+          <tr>
+            <th class="py-3 px-5">Timestamp</th>
+            <th class="py-3 px-5">Action</th>
+            <th class="py-3 px-5">Decision</th>
+            <th class="py-3 px-5">Evaluated Rule</th>
+            <th class="py-3 px-5">Reason</th>
+            <th class="py-3 px-5">Action Fingerprint</th>
           </tr>
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3.5 px-5 font-mono font-bold text-[#7c5cfc]">verify_invoice</td>
-            <td class="py-3.5 px-5 font-medium">Verify invoice integrity</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-900 border border-blue-300">LOW</span></td>
-            <td class="py-3.5 px-5 text-slate-600 font-mono">Valid invoice format required</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">ALLOW</span></td>
-          </tr>
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3.5 px-5 font-mono font-bold text-amber-700">prepare_payment</td>
-            <td class="py-3.5 px-5 font-medium">Prepare payment voucher</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">HIGH</span></td>
-            <td class="py-3.5 px-5 text-slate-600 font-mono">Amount &le; ₹10,000</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">REQUIRE APPROVAL</span></td>
-          </tr>
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3.5 px-5 font-mono font-bold text-rose-700">prepare_payment</td>
-            <td class="py-3.5 px-5 font-medium">Excessive payment guard</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">CRITICAL</span></td>
-            <td class="py-3.5 px-5 text-slate-600 font-mono">Amount &gt; ₹10,000</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">BLOCK</span></td>
-          </tr>
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3.5 px-5 font-mono font-bold text-rose-700">delete_records</td>
-            <td class="py-3.5 px-5 font-medium">Delete financial records</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">CRITICAL</span></td>
-            <td class="py-3.5 px-5 text-slate-600 font-mono">Prohibited mutation</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">BLOCK</span></td>
-          </tr>
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3.5 px-5 font-mono font-bold text-slate-500">* (unregistered)</td>
-            <td class="py-3.5 px-5 font-medium">Default deny safeguard</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-700 border border-slate-300">UNKNOWN</span></td>
-            <td class="py-3.5 px-5 text-slate-600 font-mono">Action not explicitly allowlisted</td>
-            <td class="py-3.5 px-5"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">DENY</span></td>
-          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-800">
+          <% if @recent_decisions.any? %>
+            <% @recent_decisions.each do |event| %>
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-5 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                  <%= event.occurred_at.strftime("%b %d %H:%M:%S") %>
+                </td>
+                <td class="py-3 px-5 font-mono font-bold text-[#7c5cfc]">
+                  <%= event.metadata["action_key"] %>
+                </td>
+                <td class="py-3 px-5 whitespace-nowrap">
+                  <% case event.metadata["decision"] %>
+                  <% when "allow" %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">ALLOW</span>
+                  <% when "require_approval" %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">REQUIRE APPROVAL</span>
+                  <% when "deny" %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">DENY</span>
+                  <% else %>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-800"><%= event.metadata["decision"] %></span>
+                  <% end %>
+                </td>
+                <td class="py-3 px-5 font-mono text-[11px] text-slate-600">
+                  <%= event.actor_id %>
+                </td>
+                <td class="py-3 px-5 text-slate-700 max-w-xs truncate" title="<%= event.metadata["reason"] %>">
+                  <%= event.metadata["reason"] %>
+                </td>
+                <td class="py-3 px-5 font-mono text-[10px] text-slate-400">
+                  <%= event.metadata["action_fingerprint"].to_s.first(12) %>...
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="6" class="py-8 text-center text-slate-500 font-mono text-xs">
+                No policy evaluation audit events recorded yet. Every tool evaluation creates an immutable record.
+              </td>
+            </tr>
+          <% end %>
         </tbody>
       </table>
     </div>

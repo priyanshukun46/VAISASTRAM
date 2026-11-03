@@ -7,13 +7,67 @@ system_allow_lookup:
   conditions: <%= {}.to_json %>
   enabled: true
 
+system_allow_retrieve:
+  user: null
+  name: "Allow Invoice Retrieval"
+  action_key: "retrieve_invoice"
+  effect: "allow"
+  priority: 10
+  conditions: <%= {}.to_json %>
+  enabled: true
+
+system_allow_verify:
+  user: null
+  name: "Allow Invoice Verification"
+  action_key: "verify_invoice"
+  effect: "allow"
+  priority: 20
+  conditions: <%= {}.to_json %>
+  enabled: true
+
+system_allow_vendor:
+  user: null
+  name: "Allow Vendor Lookup"
+  action_key: "get_vendor"
+  effect: "allow"
+  priority: 15
+  conditions: <%= {}.to_json %>
+  enabled: true
+
+system_deny_excessive_payment:
+  user: null
+  name: "Block Excessive Payments"
+  action_key: "prepare_payment"
+  effect: "deny"
+  priority: 30
+  conditions: <%= { "amount_gt" => 10000 }.to_json %>
+  enabled: true
+
 system_require_approval_payment:
   user: null
   name: "Require Approval for Payment"
   action_key: "prepare_payment"
   effect: "require_approval"
-  priority: 50
+  priority: 40
   conditions: <%= { "amount_lte" => 10000 }.to_json %>
+  enabled: true
+
+system_deny_delete_financial_record:
+  user: null
+  name: "Explicitly Block Financial Record Deletion"
+  action_key: "delete_financial_record"
+  effect: "deny"
+  priority: 1
+  conditions: <%= {}.to_json %>
+  enabled: true
+
+system_deny_delete_records:
+  user: null
+  name: "Explicitly Block Record Deletion"
+  action_key: "delete_records"
+  effect: "deny"
+  priority: 1
+  conditions: <%= {}.to_json %>
   enabled: true
 
 user_policy:

@@ -1,0 +1,192 @@
+<div id="approval_card_<%= approval.id %>" class="rounded-2xl border border-slate-300 bg-white p-5 sm:p-6 shadow-xs hover:border-slate-400 transition">
+  <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-dashed border-slate-200">
+    <div class="space-y-1">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#0d0726] text-white">
+          <%= approval.tool_name %>
+        </span>
+        <% case approval.status %>
+        <% when "pending" %>
+          <% if approval.expired? %>
+            <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-slate-200 text-slate-700 border border-slate-300">
+              Expired
+            </span>
+          <% else %>
+            <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center space-x-1">
+              <span class="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse"></span>
+              <span>Pending Human Review</span>
+            </span>
+          <% end %>
+        <% when "approved" %>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
+            Approved
+          </span>
+        <% when "executed" %>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
+            Executed
+          </span>
+        <% when "rejected" %>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-rose-100 text-rose-900 border border-rose-300">
+            Rejected
+          </span>
+        <% when "expired" %>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-slate-200 text-slate-700 border border-slate-300">
+            Expired
+          </span>
+        <% when "invalidated" %>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-300">
+            Invalidated
+          </span>
+        <% when "failed" %>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-red-100 text-red-900 border border-red-300">
+            Failed
+          </span>
+        <% end %>
+
+        <span class="text-xs font-mono text-slate-500">
+          Ref #<%= approval.id %>
+        </span>
+      </div>
+
+      <h3 class="text-base font-bold text-[#0d0726]">
+        <% if approval.effective_task.present? %>
+          <%= approval.effective_task.title %>
+        <% else %>
+          Action: <%= approval.tool_name %>
+        <% end %>
+      </h3>
+    </div>
+
+    <!-- Timestamps & Expiration countdown -->
+    <div class="text-right sm:shrink-0 font-mono text-xs text-slate-500 space-y-0.5">
+      <div>Requested: <strong><%= approval.requested_at ? approval.requested_at.strftime("%b %d, %H:%M") : approval.created_at.strftime("%b %d, %H:%M") %></strong></div>
+      <% if approval.expires_at.present? %>
+        <% if approval.expired? %>
+          <div class="text-rose-600 font-semibold">Expired at <%= approval.expires_at.strftime("%H:%M:%S") %></div>
+        <% elsif approval.pending? %>
+          <div class="text-amber-700 font-semibold">Expires in ~<%= distance_of_time_in_words(Time.current, approval.expires_at) %></div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Key Meta Details Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 py-4 text-xs">
+    <div class="p-3 rounded-xl bg-[#faf9f5] border border-slate-200">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Requested By</span>
+      <span class="font-bold text-[#0d0726]"><%= approval.effective_user&.name || "System" %></span>
+      <span class="text-[10px] font-mono text-slate-500 block">(Role: <%= approval.effective_user&.role || "N/A" %>)</span>
+    </div>
+
+    <div class="p-3 rounded-xl bg-[#faf9f5] border border-slate-200">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Policy Rule Reference</span>
+      <span class="font-mono font-bold text-[#0d0726]"><%= approval.policy_decision_reference || "payment_approval_threshold" %></span>
+      <span class="text-[10px] text-slate-600 block truncate">Threshold trigger</span>
+    </div>
+
+    <div class="p-3 rounded-xl bg-[#faf9f5] border border-slate-200">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Associated Task</span>
+      <% if approval.effective_task.present? %>
+        <span class="font-bold text-[#0d0726] truncate block">Task #<%= approval.effective_task.id %></span>
+        <span class="text-[10px] font-mono text-slate-500 block">Status: <%= approval.effective_task.status %></span>
+      <% else %>
+        <span class="text-slate-500">Standalone Action</span>
+      <% end %>
+    </div>
+
+    <div class="p-3 rounded-xl bg-[#faf9f5] border border-slate-200">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Action Fingerprint (SHA-256)</span>
+      <span class="font-mono text-[11px] text-slate-700 truncate block" title="<%= approval.action_fingerprint %>">
+        <%= approval.action_fingerprint.to_s.first(16) %>...
+      </span>
+      <span class="text-[10px] font-mono text-emerald-700 font-semibold block">Cryptographically Bound</span>
+    </div>
+  </div>
+
+  <!-- Arguments Breakdown Section -->
+  <div class="p-3.5 rounded-xl bg-[#faf9f5] border border-slate-200 mb-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Proposed Action Arguments</span>
+      <% if approval.effective_arguments.is_a?(Hash) && approval.effective_arguments["amount"].present? %>
+        <span class="text-xs font-mono font-black text-[#0d0726] bg-[#d4f90d] px-2 py-0.5 rounded border border-black">
+          Amount: ₹<%= number_with_delimiter(approval.effective_arguments["amount"]) %>
+        </span>
+      <% end %>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs font-mono">
+      <% if approval.effective_arguments.is_a?(Hash) %>
+        <% approval.effective_arguments.each do |key, value| %>
+          <div class="flex items-center space-x-1.5 p-1.5 bg-white rounded-lg border border-slate-200">
+            <span class="text-slate-500 font-medium"><%= key %>:</span>
+            <span class="font-bold text-[#0d0726] truncate"><%= value.is_a?(Hash) ? value.to_json : value %></span>
+          </div>
+        <% end %>
+      <% else %>
+        <span class="text-slate-500">No arguments</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Review Status & Decision Actions -->
+  <% if approval.pending? %>
+    <div class="pt-3 border-t border-dashed border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <% if current_user.can_approve?(approval) %>
+        <div class="flex items-center space-x-2">
+          <!-- Direct Approve Form -->
+          <%= button_to approve_approval_path(approval), method: :patch, class: "inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider transition shadow-xs cursor-pointer", data: { turbo_confirm: "Are you sure you want to approve and execute #{approval.tool_name} (Amount: ₹#{approval.effective_arguments['amount'] || 0})?" } do %>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Approve &amp; Resume</span>
+          <% end %>
+        </div>
+
+        <!-- Rejection Form -->
+        <%= form_with url: reject_approval_path(approval), method: :patch, class: "flex items-center space-x-2 w-full sm:w-auto" do |f| %>
+          <%= f.text_field :rejection_reason, placeholder: "Rejection reason...", class: "text-xs rounded-xl border border-slate-300 px-3 py-2 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#0d0726] w-full sm:w-64" %>
+          <%= f.button type: :submit, class: "inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 text-xs font-bold uppercase tracking-wider transition cursor-pointer shrink-0" do %>
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Reject</span>
+          <% end %>
+        <% end %>
+      <% else %>
+        <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center space-x-2 w-full">
+          <svg class="w-4 h-4 text-amber-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <span>
+            <strong>Segregation of Duties Enforced:</strong> As the task requester or non-authorized role, you cannot approve this action. An independent operator or admin must sign off.
+          </span>
+        </div>
+      <% end %>
+    </div>
+  <% elsif approval.approved? || approval.executed? %>
+    <div class="pt-3 border-t border-dashed border-slate-200 flex items-center justify-between text-xs font-medium text-emerald-800 bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200">
+      <div class="flex items-center space-x-2">
+        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span>Approved by <strong><%= approval.reviewer&.name || "Admin" %></strong> (<%= approval.reviewer&.role %>)</span>
+      </div>
+      <span class="font-mono text-[11px] text-emerald-700"><%= approval.reviewed_at&.strftime("%b %d, %H:%M:%S") %></span>
+    </div>
+  <% elsif approval.rejected? %>
+    <div class="pt-3 border-t border-dashed border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-rose-800 bg-rose-50/50 p-2.5 rounded-xl border border-rose-200 gap-2">
+      <div class="flex items-center space-x-2">
+        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <span>Rejected by <strong><%= approval.reviewer&.name || "Reviewer" %></strong>: "<%= approval.rejection_reason %>"</span>
+      </div>
+      <span class="font-mono text-[11px] text-rose-700"><%= approval.reviewed_at&.strftime("%b %d, %H:%M:%S") %></span>
+    </div>
+  <% elsif approval.expired? %>
+    <div class="pt-3 border-t border-dashed border-slate-200 text-xs text-slate-500 bg-slate-100 p-2.5 rounded-xl flex items-center justify-between">
+      <span>Approval window expired without human intervention. Action was automatically cancelled.</span>
+      <span class="font-mono text-[11px]"><%= approval.expires_at&.strftime("%b %d, %H:%M:%S") %></span>
+    </div>
+  <% end %>
+</div>
