@@ -1,31 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html class="h-full bg-slate-950 text-slate-100">
   <head>
-    <title><%= content_for(:title) || "Vaisastram" %></title>
+    <title><%= content_for(:title) || "VAISASTRAM — Governed Autonomous AI Agent Platform" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Vaisastram">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="VAISASTRAM">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
+  <body class="min-h-full flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <!-- Header / Global Governance Navigation -->
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur border-b border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo & Core Principle -->
+          <div class="flex items-center space-x-4">
+            <%= link_to root_path, class: "flex items-center space-x-3 group" do %>
+              <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:opacity-90 transition">
+                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg font-bold tracking-wider text-white font-mono">VAISASTRAM</span>
+                  <span class="text-[10px] tracking-widest uppercase font-semibold px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">Gov-Ops</span>
+                </div>
+                <div class="text-[11px] text-slate-400">AI proposes · Ruby decides</div>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Navigation Links -->
+          <% if user_signed_in? %>
+            <nav class="hidden md:flex items-center space-x-1">
+              <%= nav_link_to "Dashboard", dashboard_path %>
+              <%= nav_link_to "Agent Workspace", workspace_path %>
+              <%= nav_link_to "Approval Center", approvals_path %>
+              <%= nav_link_to "Policy Center", policies_path %>
+              <%= nav_link_to "Audit Center", audit_path %>
+              <%= nav_link_to "Evaluation Center", evaluations_path %>
+            </nav>
+          <% end %>
+
+          <!-- User Session / Controls -->
+          <div class="flex items-center space-x-3">
+            <% if user_signed_in? && current_user %>
+              <div class="hidden sm:flex flex-col text-right">
+                <span class="text-xs font-semibold text-slate-200"><%= current_user.name %></span>
+                <span class="text-[10px] text-slate-400 uppercase tracking-wider"><%= current_user.role %></span>
+              </div>
+              <div class="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 uppercase">
+                <%= current_user.name.first(2) %>
+              </div>
+              <%= button_to destroy_user_session_path, method: :delete, class: "text-xs px-2.5 py-1.5 rounded bg-slate-800 hover:bg-rose-950 hover:text-rose-300 hover:border-rose-800 border border-slate-700 text-slate-300 transition cursor-pointer" do %>
+                Sign out
+              <% end %>
+            <% else %>
+              <%= link_to "Register", new_user_registration_path, class: "text-xs font-medium px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700" %>
+              <%= link_to "Sign In", new_user_session_path, class: "text-xs font-medium px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition shadow" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Global Notice / Alert Banners -->
+    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
+      <% if notice = flash[:notice] %>
+        <div class="flex items-center justify-between p-3.5 mb-4 text-sm rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-200 shadow-sm" role="alert">
+          <div class="flex items-center space-x-2">
+            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span><%= notice %></span>
+          </div>
+        </div>
+      <% end %>
+
+      <% if alert = flash[:alert] %>
+        <div class="flex items-center justify-between p-3.5 mb-4 text-sm rounded-lg bg-rose-950/80 border border-rose-800 text-rose-200 shadow-sm" role="alert">
+          <div class="flex items-center space-x-2">
+            <svg class="w-4 h-4 text-rose-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span><%= alert %></span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
       <%= yield %>
     </main>
+
+    <!-- Professional Governance Footer -->
+    <footer class="mt-auto border-t border-slate-800/80 bg-slate-900/60 py-5 text-xs text-slate-400">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <span class="font-mono font-semibold text-slate-300">VAISASTRAM</span>
+          <span class="text-slate-600">|</span>
+          <span>Policy-Enforced Autonomous AI Agent Runtime</span>
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">v1.0.0-phase1</span>
+        </div>
+        <div class="flex items-center space-x-6 text-[11px] text-slate-400">
+          <span class="flex items-center space-x-1.5">
+            <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Policy Guard: <strong class="text-slate-200">Enforcing</strong></span>
+          </span>
+          <span>Engine: <strong class="text-slate-200">Ruby 3.4.6 / Rails 8.1</strong></span>
+          <span>DB: <strong class="text-slate-200">PostgreSQL</strong></span>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>

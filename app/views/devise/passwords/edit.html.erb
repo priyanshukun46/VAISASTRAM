@@ -1,0 +1,38 @@
+<div class="max-w-md mx-auto my-10">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl">
+    <div class="text-center mb-8">
+      <div class="inline-flex h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-amber-500 items-center justify-center shadow-lg shadow-indigo-500/20 mb-3">
+        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-white font-mono">Set New Secret</h1>
+      <p class="text-xs text-slate-400 mt-1">Update your operator authorization secret</p>
+    </div>
+
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put, class: "space-y-4" }) do |f| %>
+      <%= f.hidden_field :reset_password_token %>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <%= f.label :password, "New Secret", class: "block text-xs font-semibold uppercase tracking-wider text-slate-300" %>
+          <% if @minimum_password_length %>
+            <span class="text-[11px] text-slate-500">(<%= @minimum_password_length %> characters min)</span>
+          <% end %>
+        </div>
+        <%= f.password_field :password, autofocus: true, autocomplete: "new-password", placeholder: "••••••••••••", required: true, class: "w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition" %>
+      </div>
+
+      <div>
+        <%= f.label :password_confirmation, "Confirm New Secret", class: "block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5" %>
+        <%= f.password_field :password_confirmation, autocomplete: "new-password", placeholder: "••••••••••••", required: true, class: "w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition" %>
+      </div>
+
+      <div class="pt-2">
+        <%= f.submit "Update Secret & Authorize", class: "w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/30 cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>

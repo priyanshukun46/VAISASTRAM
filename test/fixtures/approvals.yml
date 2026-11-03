@@ -1,0 +1,6 @@
+pending_payment_approval:
+  agent_step: step_two
+  reviewer: two
+  status: "pending"
+  action_digest: <%= Digest::SHA256.hexdigest({ action_key: "prepare_payment", arguments: { invoice_id: "INV-100", amount: 5000 } }.to_json) %>
+  expires_at: <%= 24.hours.from_now %>

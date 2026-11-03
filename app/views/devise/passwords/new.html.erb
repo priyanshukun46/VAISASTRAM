@@ -1,0 +1,32 @@
+<div class="max-w-md mx-auto my-10">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl">
+    <div class="text-center mb-8">
+      <div class="inline-flex h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-amber-500 items-center justify-center shadow-lg shadow-indigo-500/20 mb-3">
+        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-white font-mono">Reset Secret</h1>
+      <p class="text-xs text-slate-400 mt-1">Receive instructions to recover your operator credentials</p>
+    </div>
+
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "space-y-4" }) do |f| %>
+      <div>
+        <%= f.label :email, "Operator Email", class: "block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5" %>
+        <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "operator@vaisastram.internal", required: true, class: "w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition" %>
+      </div>
+
+      <div class="pt-2">
+        <%= f.submit "Send Recovery Instructions", class: "w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/30 cursor-pointer" %>
+      </div>
+    <% end %>
+
+    <div class="mt-6 pt-5 border-t border-slate-800 text-center">
+      <div class="text-xs text-slate-400">
+        Remembered your secret? <%= link_to "Return to sign in", new_session_path(resource_name), class: "text-indigo-400 hover:text-indigo-300 font-medium" %>
+      </div>
+    </div>
+  </div>
+</div>

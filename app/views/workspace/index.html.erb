@@ -1,0 +1,39 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between border-b border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-white font-mono">Agent Workspace</h1>
+      <p class="text-sm text-slate-400 mt-1">
+        Submit natural-language instructions to autonomous agents with real-time policy evaluation.
+      </p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
+        Engine: Policy Guard Active
+      </span>
+    </div>
+  </div>
+
+  <div class="p-6 rounded-xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
+    <h2 class="text-base font-semibold text-white">Delegate Task to Autonomous Agent</h2>
+    <p class="text-xs text-slate-400">
+      The AI agent will decompose this instruction into structured tool calls. Every step will be intercepted by the Ruby policy engine before execution.
+    </p>
+
+    <div class="space-y-3">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+        Task Instruction
+      </label>
+      <textarea rows="3" class="w-full px-4 py-3 rounded-lg bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition resize-none" placeholder="e.g. Verify invoice INV-100 and prepare a payment of ₹5,000." disabled></textarea>
+      
+      <div class="flex items-center justify-between pt-2">
+        <div class="text-xs text-slate-500 flex items-center space-x-2">
+          <span>Example:</span>
+          <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]">Verify invoice INV-100 and prepare a payment of ₹5,000.</span>
+        </div>
+        <button class="px-4 py-2 rounded-lg bg-indigo-600/50 text-indigo-300 text-sm font-semibold cursor-not-allowed">
+          Phase 2 Integration
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

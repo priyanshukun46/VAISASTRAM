@@ -1,14 +1,25 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  # Devise Authentication
+  devise_for :users
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # Convenience & legacy route redirects
+  get "/session/new", to: redirect("/users/sign_in")
+  get "/login", to: redirect("/users/sign_in")
+  get "/sign_in", to: redirect("/users/sign_in")
+  get "/sign_up", to: redirect("/users/sign_up")
+  get "/register", to: redirect("/users/sign_up")
+
+  # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  # Core Governance Routes
+  root "dashboard#index"
+  get "dashboard", to: "dashboard#index", as: :dashboard
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # Protected navigation routes
+  get "workspace", to: "workspace#index", as: :workspace
+  get "approvals", to: "approvals#index", as: :approvals
+  get "policies", to: "policies#index", as: :policies
+  get "audit", to: "audit#index", as: :audit
+  get "evaluations", to: "evaluations#index", as: :evaluations
 end

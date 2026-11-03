@@ -1,0 +1,22 @@
+step_one:
+  execution: invoice_execution
+  position: 1
+  action_key: "lookup_invoice"
+  arguments: <%= { invoice_id: "INV-100" }.to_json %>
+  status: "completed"
+  risk_level: "low"
+  policy_decision: "allow"
+  result: <%= { invoice_id: "INV-100", amount: 5000, valid: true }.to_json %>
+  started_at: <%= 5.minutes.ago %>
+  completed_at: <%= 4.minutes.ago %>
+
+step_two:
+  execution: invoice_execution
+  position: 2
+  action_key: "prepare_payment"
+  arguments: <%= { invoice_id: "INV-100", amount: 5000 }.to_json %>
+  status: "waiting_approval"
+  risk_level: "high"
+  policy_decision: "require_approval"
+  result: <%= {}.to_json %>
+  started_at: <%= 3.minutes.ago %>

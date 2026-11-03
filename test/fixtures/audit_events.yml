@@ -1,0 +1,18 @@
+task_created_event:
+  user: one
+  execution: invoice_execution
+  event_type: "task_submitted"
+  actor_type: "user"
+  actor_id: "one"
+  metadata: <%= { title: "Verify invoice INV-100" }.to_json %>
+  occurred_at: <%= 10.minutes.ago %>
+
+policy_evaluated_event:
+  user: null
+  execution: invoice_execution
+  agent_step: step_two
+  event_type: "policy_evaluated"
+  actor_type: "policy_engine"
+  actor_id: "ruby_policy_engine"
+  metadata: <%= { decision: "require_approval", risk_level: "high" }.to_json %>
+  occurred_at: <%= 3.minutes.ago %>

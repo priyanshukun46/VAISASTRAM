@@ -1,0 +1,76 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between border-b border-slate-800 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-white font-mono">Policy Center</h1>
+      <p class="text-sm text-slate-400 mt-1">
+        Declarative authorization rules, spending limits, risk classification, and allowlist governance.
+      </p>
+    </div>
+    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
+      Default-Deny Policy Active
+    </span>
+  </div>
+
+  <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-xl">
+    <div class="p-5 border-b border-slate-800">
+      <h2 class="text-base font-semibold text-white">Active Governance Policies</h2>
+      <p class="text-xs text-slate-400">Independent Ruby evaluation applied prior to tool dispatch.</p>
+    </div>
+
+    <table class="min-w-full divide-y divide-slate-800 text-left text-xs">
+      <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold">
+        <tr>
+          <th class="py-3 px-4">Action / Tool</th>
+          <th class="py-3 px-4">Policy Rule</th>
+          <th class="py-3 px-4">Risk Level</th>
+          <th class="py-3 px-4">Conditions</th>
+          <th class="py-3 px-4">Decision</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/60 text-slate-300">
+        <tr>
+          <td class="py-3.5 px-4 font-mono text-indigo-300">lookup_invoice</td>
+          <td class="py-3.5 px-4">Read invoice details</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-400 border border-blue-800">LOW</span></td>
+          <td class="py-3.5 px-4 text-slate-400">Read-only tool allowlisted</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">ALLOW</span></td>
+        </tr>
+        <tr>
+          <td class="py-3.5 px-4 font-mono text-indigo-300">verify_invoice</td>
+          <td class="py-3.5 px-4">Verify invoice integrity</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-400 border border-blue-800">LOW</span></td>
+          <td class="py-3.5 px-4 text-slate-400">Valid invoice format required</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">ALLOW</span></td>
+        </tr>
+        <tr>
+          <td class="py-3.5 px-4 font-mono text-amber-300">prepare_payment</td>
+          <td class="py-3.5 px-4">Prepare payment voucher</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-amber-950 text-amber-400 border border-amber-800">HIGH</span></td>
+          <td class="py-3.5 px-4 text-slate-400">Amount &le; ₹10,000</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-amber-950 text-amber-400 border border-amber-800">REQUIRE APPROVAL</span></td>
+        </tr>
+        <tr>
+          <td class="py-3.5 px-4 font-mono text-rose-300">prepare_payment</td>
+          <td class="py-3.5 px-4">Excessive payment guard</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-rose-950 text-rose-300 border border-rose-800">CRITICAL</span></td>
+          <td class="py-3.5 px-4 text-slate-400">Amount &gt; ₹10,000</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-rose-950 text-rose-300 border border-rose-800">BLOCK</span></td>
+        </tr>
+        <tr>
+          <td class="py-3.5 px-4 font-mono text-rose-300">delete_records</td>
+          <td class="py-3.5 px-4">Delete financial records</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-rose-950 text-rose-300 border border-rose-800">CRITICAL</span></td>
+          <td class="py-3.5 px-4 text-slate-400">Prohibited operation</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-rose-950 text-rose-300 border border-rose-800">BLOCK</span></td>
+        </tr>
+        <tr>
+          <td class="py-3.5 px-4 font-mono text-slate-400">* (unregistered)</td>
+          <td class="py-3.5 px-4">Default deny safeguard</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">UNKNOWN</span></td>
+          <td class="py-3.5 px-4 text-slate-400">Action not explicitly allowlisted</td>
+          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-rose-950 text-rose-300 border border-rose-800">DENY</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

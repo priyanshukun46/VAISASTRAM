@@ -1,0 +1,26 @@
+system_allow_lookup:
+  user: null
+  name: "Allow Invoice Lookup"
+  action_key: "lookup_invoice"
+  effect: "allow"
+  priority: 10
+  conditions: <%= {}.to_json %>
+  enabled: true
+
+system_require_approval_payment:
+  user: null
+  name: "Require Approval for Payment"
+  action_key: "prepare_payment"
+  effect: "require_approval"
+  priority: 50
+  conditions: <%= { "amount_lte" => 10000 }.to_json %>
+  enabled: true
+
+user_policy:
+  user: one
+  name: "Custom User Policy"
+  action_key: "custom_action"
+  effect: "deny"
+  priority: 100
+  conditions: <%= {}.to_json %>
+  enabled: true

@@ -1,0 +1,17 @@
+lookup_tool:
+  key: "lookup_invoice"
+  name: "Invoice Lookup"
+  description: "Reads invoice"
+  risk_level: "low"
+  required_permission: "invoice:read"
+  input_schema: <%= { type: "object", properties: { invoice_id: { type: "string" } } }.to_json %>
+  enabled: true
+
+payment_tool:
+  key: "prepare_payment"
+  name: "Prepare Payment"
+  description: "Simulated payment preparation"
+  risk_level: "high"
+  required_permission: "payment:prepare"
+  input_schema: <%= { type: "object", properties: { amount: { type: "number" } } }.to_json %>
+  enabled: true
