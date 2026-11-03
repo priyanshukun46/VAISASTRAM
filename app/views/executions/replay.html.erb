@@ -1,0 +1,171 @@
+<div class="space-y-8">
+  <!-- Top Navigation & Overview -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
+    <div class="flex items-center space-x-3">
+      <%= link_to timeline_execution_path(@execution), class: "p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-black hover:border-slate-300 transition shadow-2xs" do %>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      <% end %>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-xl font-black tracking-tight text-[#0d0726]">Execution Replay &amp; Comparison</h1>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">#<%= @execution.id %></span>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded <%= @replay_result.simulation? ? 'bg-purple-100 text-purple-900 border border-purple-300' : 'bg-blue-100 text-blue-900 border border-blue-300' %>">
+            <%= @replay_result.mode.upcase %> MODE
+          </span>
+        </div>
+        <p class="text-xs text-slate-600 mt-0.5 font-medium">
+          Session ID: <span class="font-mono text-slate-700 font-bold"><%= @replay_result.session_id %></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Mode Selector Controls -->
+    <div class="flex items-center space-x-2 font-mono text-xs">
+      <%= link_to replay_execution_path(@execution, mode: :inspection), class: "px-3 py-1.5 rounded-xl font-bold transition #{!@replay_result.simulation? ? 'bg-[#0d0726] text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}" do %>
+        <span>Mode A: Inspection</span>
+      <% end %>
+
+      <%= link_to replay_execution_path(@execution, mode: :simulation), class: "px-3 py-1.5 rounded-xl font-bold transition #{@replay_result.simulation? ? 'bg-[#0d0726] text-[#d4f90d] shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}" do %>
+        <span>Mode B: Simulation Re-eval</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Non-Side-Effect Mandate Alert -->
+  <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex items-start space-x-3 shadow-2xs">
+    <svg class="w-5 h-5 text-amber-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div class="text-xs leading-relaxed">
+      <strong class="font-bold">Execution Replay Governance:</strong>
+      Replay is strictly analytical and simulated.
+      <% if @replay_result.simulation? %>
+        Actions are evaluated against <em>current</em> live policy rules in a safe sandbox. Old human approvals are not consumed, and no external tool dispatch or banking payment vouchers are created.
+      <% else %>
+        Historical audit events and step states are reconstructed without executing tools or calling AI APIs.
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Replay Comparison Content -->
+  <% if @replay_result.simulation? %>
+    <!-- Mode B: Simulation Comparison View -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-3">
+        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Historical Run vs Current Policy Simulation</h2>
+        <% if @replay_result.divergent? %>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-100 text-rose-900 border border-rose-300">
+            <%= @replay_result.differences.size %> Policy Divergence Detected
+          </span>
+        <% else %>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+            Identical Policy Decisions
+          </span>
+        <% end %>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4">
+        <% @replay_result.simulated_steps.each do |sim| %>
+          <div class="p-5 rounded-2xl border <%= sim[:divergent] ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white' %> shadow-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-dashed border-slate-200 pb-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[#0d0726] text-white">
+                  Step #<%= sim[:position] %>
+                </span>
+                <span class="font-mono font-bold text-sm text-[#0d0726]"><%= sim[:action_key] %></span>
+              </div>
+              <div>
+                <% if sim[:divergent] %>
+                  <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-rose-200 text-rose-900 border border-rose-300 font-bold">
+                    Diverged under current policies
+                  </span>
+                <% else %>
+                  <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-200">
+                    Policy Match
+                  </span>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Side by Side Policy Decision Comparison -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 text-xs">
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Historical Decision</span>
+                <span class="font-mono font-bold uppercase text-sm <%= sim[:historical_decision] == 'allow' ? 'text-emerald-700' : (sim[:historical_decision] == 'require_approval' ? 'text-amber-700' : 'text-rose-700') %>">
+                  <%= sim[:historical_decision] || 'pending' %>
+                </span>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Current Policy Evaluation (Simulated)</span>
+                <span class="font-mono font-bold uppercase text-sm <%= sim[:current_policy_decision] == 'allow' ? 'text-emerald-700' : (sim[:current_policy_decision] == 'require_approval' ? 'text-amber-700' : 'text-rose-700') %>">
+                  <%= sim[:current_policy_decision] %>
+                </span>
+                <span class="text-[11px] text-slate-600 block mt-1"><%= sim[:policy_reason] %></span>
+              </div>
+            </div>
+
+            <div class="mt-3 p-3 rounded-xl bg-[#faf9f5] border border-slate-200 font-mono text-[11px]">
+              <span class="text-[10px] uppercase text-slate-500 block mb-1">Simulated Sandbox Result (Zero Real Side Effects):</span>
+              <pre class="bg-white p-2 rounded border border-slate-200 text-[10px] overflow-x-auto"><%= JSON.pretty_generate(sim[:simulated_result]) %></pre>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <!-- Mode A: Inspection Replay View -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-3">
+        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Reconstructed Historical Execution Steps</h2>
+        <span class="text-xs font-mono text-slate-500">
+          Reconstructed from <%= @replay_result.audit_events_count %> immutable audit events
+        </span>
+      </div>
+
+      <div class="space-y-4">
+        <% @replay_result.reconstructed_steps.each do |step| %>
+          <div class="p-5 rounded-2xl border border-slate-300 bg-white shadow-xs space-y-3">
+            <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[#0d0726] text-white">
+                  Step #<%= step[:position] %>
+                </span>
+                <span class="font-mono font-bold text-sm text-[#0d0726]"><%= step[:action_key] %></span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300">
+                  Status: <%= step[:status] %>
+                </span>
+                <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300">
+                  Policy: <%= step[:policy_decision] || 'none' %>
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 rounded-xl bg-[#faf9f5] border border-slate-200">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-1">Sanitized Historical Arguments:</span>
+                <pre class="bg-white p-2 rounded border border-slate-200 font-mono text-[10px] overflow-x-auto"><%= JSON.pretty_generate(step[:arguments]) %></pre>
+              </div>
+
+              <div class="p-3 rounded-xl bg-[#faf9f5] border border-slate-200">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-1">Recorded Output Result:</span>
+                <pre class="bg-white p-2 rounded border border-slate-200 font-mono text-[10px] overflow-x-auto"><%= JSON.pretty_generate(step[:result]) %></pre>
+              </div>
+            </div>
+
+            <% if step[:approval].present? %>
+              <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between">
+                <span>Human Review Sign-off: <strong><%= step[:approval][:status].upcase %></strong> by <%= step[:approval][:reviewer_name] || 'Reviewer' %></span>
+                <span class="font-mono text-[11px]"><%= step[:approval][:reviewed_at]&.strftime("%b %d, %H:%M:%S") %></span>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

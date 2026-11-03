@@ -27,13 +27,13 @@ class OllamaLiveIntegrationTest < ActiveSupport::TestCase
       prompt = "Verify invoice INV-100 and prepare payment"
       response = provider.generate(
         prompt,
-        system_instruction: "You are an autonomous AI planner. AI proposes. Ruby decides. Output JSON with goal, response, steps.",
+        system_instruction: "You are an autonomous AI planner. AI proposes. Ruby decides. Output JSON with mode ('action_plan' or 'conversation'), response, steps.",
         schema: Planning::PlanSchema.json_schema(available_tools: ["lookup_invoice", "verify_invoice", "prepare_payment"])
       )
 
       assert_equal "ollama", response.provider
       assert_equal @model, response.model
-      assert response["goal"].present?
+      assert_includes Planning::PlanSchema::MODES, response["mode"]
       assert response["response"].present?
       assert response["steps"].is_a?(Array)
     else

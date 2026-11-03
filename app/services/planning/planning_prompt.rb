@@ -67,11 +67,12 @@ module Planning
            }
            CRITICAL: In action_plan mode, "goal" MUST be a non-empty string and "steps" MUST contain at least one step from the allowlisted tools.
 
-        REQUIRED JSON OUTPUT STRUCTURE:
+        MANDATORY JSON OUTPUT CONTRACT:
         You must return a single JSON object strictly matching one of the two modes above.
-        - "mode" is REQUIRED ("conversation" or "action_plan").
+        - "mode" is REQUIRED and MUST be the first key: either "conversation" or "action_plan". Never omit "mode".
         - "response" is REQUIRED (string, prospective language; never claim actions have completed).
         - "steps" is REQUIRED (array; [] in conversation mode, 1 to #{PlanSchema::MAX_STEPS} steps in action_plan mode).
+        - "goal" is REQUIRED in action_plan mode (concise string); MUST be null or omitted in conversation mode.
 
         STRICT PLANNING RULES:
         1. Propose ONLY actions from the available tools list above.
@@ -96,11 +97,15 @@ module Planning
 
         CLASSIFIED INTENT HINT: #{classified_intent}
 
+        MANDATORY JSON OUTPUT INSTRUCTION:
+        Your response MUST be valid JSON containing the "mode" field as the primary key.
         - If asking a general question, greeting, technical explanation, brainstorming, or conversational query (e.g. "who are you", "hello", "explain quantum computing", "how does Raft work", "brainstorm architecture ideas"):
           Return "mode": "conversation" with your conversational answer in "response", "goal": null, and "steps": []. Introduce yourself as VAISASTRAM when asked about identity. Do not invoke financial tools.
         - If requesting an actionable task requiring registered tools (e.g. "Verify invoice INV-100", "Prepare payment of INR 5000"):
           Return "mode": "action_plan" with a concise "goal", prospective "response", and sequential "steps".
         - If the request requires tools that are NOT in the allowlisted tools list, do NOT invent tools. Return "mode": "conversation" and explain that no tool is registered for that action.
+
+        CRITICAL: Never omit the "mode" field. Do not include markdown fences or text outside the JSON.
       PROMPT
     end
 

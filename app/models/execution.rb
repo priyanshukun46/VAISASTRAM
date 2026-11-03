@@ -73,7 +73,7 @@ class Execution < ApplicationRecord
       "ALL_PROVIDERS_FAILED"
     elsif msg.include?("timed out") || msg.include?("Timeout")
       "PROVIDER_TIMEOUT"
-    elsif msg.include?("ValidationError") || msg.include?("Missing required field") || msg.include?("invalid type") || msg.include?("not valid JSON")
+    elsif msg.include?("ValidationError") || msg.include?("Missing required field") || msg.include?("invalid type") || msg.include?("not valid JSON") || msg.include?("Invalid mode")
       "SCHEMA_VALIDATION_ERROR"
     elsif msg.include?("Authentication") || msg.include?("401") || msg.include?("403")
       "AUTHENTICATION_ERROR"

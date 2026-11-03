@@ -36,7 +36,7 @@ class PlanValidatorTest < ActiveSupport::TestCase
   end
 
   test "rejects missing required top-level fields" do
-    %w[goal response steps].each do |field|
+    %w[mode goal response steps].each do |field|
       invalid = @valid_plan.except(field)
       err = assert_raises(Planning::ValidationError) do
         Planning::PlanValidator.validate!(invalid, allowed_tools: @allowed_tools)
@@ -251,5 +251,82 @@ class PlanValidatorTest < ActiveSupport::TestCase
       Planning::PlanValidator.validate!(invalid_action_plan, allowed_tools: @allowed_tools)
     end
     assert_includes err.message, "Missing required field 'goal' in plan"
+  end
+
+  test "rejects plan with empty or whitespace mode" do
+    ["", "   ", nil].each do |blank_val|
+      invalid = @valid_plan.merge("mode" => blank_val)
+      err = assert_raises(Planning::ValidationError) do
+        Planning::PlanValidator.validate!(invalid, allowed_tools: @allowed_tools)
+      end
+      assert_includes err.message, "Missing required field 'mode' in plan"
+    end
+  end
+
+  test "canonical plan schema requires mode" do
+    schema = Planning::PlanSchema.json_schema
+    assert_includes schema[:required], "mode"
+    assert_includes schema[:required], "response"
+    assert_includes schema[:required], "steps"
+    assert_equal %w[conversation action_plan], schema[:properties][:mode][:enum]
+  end
+
+  # =========================================================
+  # Regression Tests: steps variable scope and validation consistency
+  # =========================================================
+
+  test "regression: steps is always in scope and does not raise NameError" do
+    # When validating via class method
+    assert_nothing_raised do
+      Planning::PlanValidator.validate!(@valid_plan, allowed_tools: @allowed_tools)
+    end
+
+    # When validating via instance method with initialize arguments
+    validator = Planning::PlanValidator.new(@valid_plan, allowed_tools: @allowed_tools)
+    assert_nothing_raised do
+      validator.validate!
+    end
+    assert_equal 3, validator.steps.size
+    assert_equal "action_plan", validator.mode
+
+    # When validating via parameterless new
+    assert_nothing_raised do
+      Planning::PlanValidator.new.validate!(@valid_plan, allowed_tools: @allowed_tools)
+    end
+  end
+
+  test "regression: missing steps field raises ValidationError without NameError" do
+    invalid = @valid_plan.except("steps")
+    err = assert_raises(Planning::ValidationError) do
+      Planning::PlanValidator.validate!(invalid, allowed_tools: @allowed_tools)
+    end
+    assert_equal "Missing required field 'steps' in plan", err.message
+  end
+
+  test "regression: non-array steps field raises ValidationError without NameError" do
+    invalid = @valid_plan.merge("steps" => "not_an_array")
+    err = assert_raises(Planning::ValidationError) do
+      Planning::PlanValidator.validate!(invalid, allowed_tools: @allowed_tools)
+    end
+    assert_equal "Field 'steps' must be an Array, got String", err.message
+  end
+
+  test "validates plan structure directly produced by PlanNormalizer" do
+    raw_ai_output = {
+      "mode" => "Action_Plan", # case variation
+      "goal" => "Prepare payment of INR 5000",
+      "response" => "I will retrieve the invoice and prepare payment.",
+      "steps" => [
+        {
+          "step_number" => "1", # string coerced to int
+          "action" => "lookup_invoice",
+          "arguments" => { invoice_id: "INV-100" },
+          "description" => "Lookup invoice"
+        }
+      ]
+    }
+
+    normalized = Planning::PlanNormalizer.normalize(raw_ai_output)
+    assert Planning::PlanValidator.validate!(normalized, allowed_tools: @allowed_tools)
   end
 end

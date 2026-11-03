@@ -1,0 +1,48 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between border-b border-dashed border-slate-300 pb-4">
+    <div class="flex items-center space-x-3">
+      <%= link_to timeline_execution_path(@execution), class: "p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-black transition shadow-2xs" do %>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      <% end %>
+      <div>
+        <h1 class="text-xl font-black tracking-tight text-[#0d0726]">Execution Audit Records</h1>
+        <p class="text-xs text-slate-600 font-mono">Chain: execution:<%= @execution.id %> (<%= @events.size %> events)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto rounded-2xl border border-slate-300 bg-white shadow-xs">
+    <table class="min-w-full divide-y divide-slate-200 text-left text-xs font-mono">
+      <thead class="bg-[#f4f3ef] text-slate-700 uppercase tracking-wider font-bold">
+        <tr>
+          <th class="py-3 px-4">Seq</th>
+          <th class="py-3 px-4">Timestamp</th>
+          <th class="py-3 px-4">Event Type</th>
+          <th class="py-3 px-4">Actor</th>
+          <th class="py-3 px-4">Tool</th>
+          <th class="py-3 px-4">Decision</th>
+          <th class="py-3 px-4">Event Hash</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 text-[11px]">
+        <% @events.each do |e| %>
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-2.5 px-4 font-bold text-slate-800">#<%= e.sequence_number %></td>
+            <td class="py-2.5 px-4 text-slate-500 whitespace-nowrap"><%= e.occurred_at.strftime("%H:%M:%S.%L") %></td>
+            <td class="py-2.5 px-4 font-bold text-[#0d0726]"><%= e.event_type %></td>
+            <td class="py-2.5 px-4 text-slate-600"><%= e.actor_type %> (<%= e.actor_id %>)</td>
+            <td class="py-2.5 px-4 text-slate-700"><%= e.tool_name || '—' %></td>
+            <td class="py-2.5 px-4 uppercase font-bold <%= e.policy_decision == 'allow' ? 'text-emerald-700' : (e.policy_decision == 'require_approval' ? 'text-amber-700' : 'text-rose-700') %>">
+              <%= e.policy_decision || '—' %>
+            </td>
+            <td class="py-2.5 px-4 text-slate-500 truncate max-w-xs" title="<%= e.event_hash %>">
+              <%= e.event_hash ? e.event_hash.first(16) + '...' : '—' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

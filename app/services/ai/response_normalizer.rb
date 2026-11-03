@@ -31,9 +31,9 @@ module Ai
     def clean_data_structure(data, raw_content)
       if data.is_a?(Hash)
         # Unwrap nested plan wrapper if provider wrapped top-level object
-        if !data.key?("goal") && !data.key?(:goal)
+        if !data.key?("goal") && !data.key?(:goal) && !data.key?("mode") && !data.key?(:mode)
           nested = data["plan"] || data[:plan] || data["execution_plan"] || data[:execution_plan]
-          return nested if nested.is_a?(Hash) && (nested.key?("goal") || nested.key?(:goal))
+          return nested if nested.is_a?(Hash) && (nested.key?("goal") || nested.key?(:goal) || nested.key?("mode") || nested.key?(:mode))
         end
         return data
       end

@@ -36,14 +36,19 @@ module Policies
     private
 
     def record_audit_event!(decision)
-      AuditEvent.create!(
+      Audit::Recorder.record!(
         user: @context.user,
+        task: @context.task,
         execution: @context.execution,
         agent_step: @context.agent_step,
         event_type: "policy_evaluated",
         actor_type: "policy_engine",
         actor_id: decision.policy_id,
+        tool_name: @context.tool&.name || @context.action_key,
+        action_fingerprint: decision.action_fingerprint,
+        policy_decision: decision.decision,
         occurred_at: decision.evaluation_timestamp,
+        security_critical: true,
         metadata: {
           action_key: @context.action_key,
           tool_name: @context.tool&.name,
@@ -57,8 +62,8 @@ module Policies
         }
       )
     rescue StandardError => e
-      # Audit failure is logged; audit events are critical
       Rails.logger.error("[VAISASTRAM Policy Engine Audit Failure] #{e.message}")
+      raise
     end
 
     def synchronize_agent_step!(decision)

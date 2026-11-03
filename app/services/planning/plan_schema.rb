@@ -77,7 +77,7 @@ module Planning
             }
           }
         },
-        required: ["response", "steps"]
+        required: ["mode", "response", "steps"]
       }
 
       if available_tools.present?

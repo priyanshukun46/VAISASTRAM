@@ -39,6 +39,20 @@ class WorkspaceController < ApplicationController
       submitted_at: Time.current
     )
 
+    # Record task creation in audit trail
+    Audit::Recorder.record!(
+      event_type: "task_created",
+      actor_type: "user",
+      actor_id: current_user.id.to_s,
+      user: current_user,
+      task: task,
+      metadata: {
+        title: task.title,
+        agent_name: agent.name,
+        instruction_preview: instruction.truncate(120)
+      }
+    )
+
     result = Planning::AgentPlanner.plan(task: task, user: current_user)
 
     if result.success?

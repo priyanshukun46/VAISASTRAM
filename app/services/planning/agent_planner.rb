@@ -57,11 +57,11 @@ module Planning
           schema: schema
         )
 
-        # 6. Strict Validation (Untrusted AI Output)
-        PlanValidator.validate!(ai_response.data, allowed_tools: allowed_keys)
-
-        # 7. Normalization
+        # 6. Normalize valid model responses (aliases, casing, arguments)
         normalized_plan = PlanNormalizer.normalize(ai_response.data)
+
+        # 7. Strict Validation (Untrusted AI Output)
+        PlanValidator.validate!(normalized_plan, allowed_tools: allowed_keys)
 
         # 8. Atomic Persistence
         steps = []
@@ -92,10 +92,56 @@ module Planning
             end
           end
 
-          # Immutable Audit Log
-          event_type = normalized_plan["mode"] == "conversation" ? "conversation_replied" : "plan_generated"
-          AuditEvent.create!(
+          # Record AI provider selection & fallback in audit trail
+          Audit::Recorder.record(
+            event_type: "ai_provider_selected",
+            actor_type: "system",
+            actor_id: "agent_planner",
             user: @user,
+            task: @task,
+            execution: execution,
+            metadata: {
+              provider: ai_response.provider,
+              model: ai_response.model,
+              duration_ms: ai_response.duration_ms
+            }
+          )
+
+          if ai_response.fallback?
+            Audit::Recorder.record(
+              event_type: "ai_provider_fallback_used",
+              actor_type: "system",
+              actor_id: "agent_planner",
+              user: @user,
+              task: @task,
+              execution: execution,
+              metadata: {
+                primary_failed: true,
+                fallback_provider: ai_response.provider,
+                fallback_reason: ai_response.metadata[:fallback_reason]
+              }
+            )
+          end
+
+          Audit::Recorder.record!(
+            event_type: "plan_validated",
+            actor_type: "system",
+            actor_id: "plan_validator",
+            user: @user,
+            task: @task,
+            execution: execution,
+            metadata: {
+              mode: normalized_plan["mode"],
+              steps_count: steps.size,
+              requires_action: normalized_plan["requires_action"]
+            }
+          )
+
+          # Immutable Audit Log for plan output
+          event_type = normalized_plan["mode"] == "conversation" ? "conversation_replied" : "plan_generated"
+          Audit::Recorder.record!(
+            user: @user,
+            task: @task,
             execution: execution,
             event_type: event_type,
             actor_type: "agent",
@@ -162,8 +208,9 @@ module Planning
           completed_at: Time.current
         )
 
-        AuditEvent.create(
+        Audit::Recorder.record(
           user: @user,
+          task: @task,
           execution: execution,
           event_type: "planning_failed",
           actor_type: "system",
@@ -172,6 +219,18 @@ module Planning
             error_class: error.class.name,
             error_message: error.message,
             duration_ms: duration_ms
+          }
+        )
+
+        Audit::Recorder.record(
+          user: @user,
+          task: @task,
+          execution: execution,
+          event_type: "plan_rejected",
+          actor_type: "system",
+          actor_id: "plan_validator",
+          metadata: {
+            reason: error.message
           }
         )
       end

@@ -60,15 +60,20 @@ module Approvals
     private
 
     def record_expiration_audit!(approval)
-      AuditEvent.create!(
+      Audit::Recorder.record!(
         user: approval.effective_user,
+        task: approval.effective_task,
         execution: approval.effective_execution,
         agent_step: approval.agent_step,
         approval: approval,
         event_type: "approval_expired",
         actor_type: "system",
         actor_id: "expiration_service",
+        tool_name: approval.effective_tool_name,
+        action_fingerprint: approval.action_fingerprint,
+        status: "expired",
         occurred_at: Time.current,
+        security_critical: true,
         metadata: {
           approval_id: approval.id,
           tool_name: approval.effective_tool_name,

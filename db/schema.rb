@@ -52,7 +52,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
   end
 
   create_table "approvals", force: :cascade do |t|
-    t.bigint "agent_step_id", null: false
+    t.bigint "agent_step_id"
     t.bigint "reviewer_id"
     t.string "status", default: "pending", null: false
     t.string "action_digest", null: false
@@ -61,12 +61,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
     t.text "rejection_reason"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.bigint "task_id"
+    t.bigint "execution_id"
+    t.string "tool_name"
+    t.jsonb "action_arguments", default: {}, null: false
+    t.string "action_fingerprint"
+    t.string "policy_decision_reference"
+    t.datetime "requested_at"
     t.index ["action_digest"], name: "index_approvals_on_action_digest"
+    t.index ["action_fingerprint"], name: "index_approvals_on_action_fingerprint"
     t.index ["agent_step_id"], name: "index_approvals_on_agent_step_id"
+    t.index ["execution_id"], name: "index_approvals_on_execution_id"
     t.index ["expires_at"], name: "index_approvals_on_expires_at"
     t.index ["reviewer_id"], name: "index_approvals_on_reviewer_id"
+    t.index ["status", "expires_at"], name: "index_approvals_on_status_and_expires_at"
     t.index ["status"], name: "index_approvals_on_status"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'expired'::character varying]::text[])", name: "check_approvals_status"
+    t.index ["task_id"], name: "index_approvals_on_task_id"
+    t.index ["tool_name"], name: "index_approvals_on_tool_name"
+    t.index ["user_id"], name: "index_approvals_on_user_id"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'approved'::character varying::text, 'rejected'::character varying::text, 'expired'::character varying::text, 'invalidated'::character varying::text, 'executed'::character varying::text, 'failed'::character varying::text])", name: "check_approvals_status"
   end
 
   create_table "audit_events", force: :cascade do |t|
@@ -207,7 +221,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
   add_foreign_key "agent_steps", "executions", on_delete: :cascade
   add_foreign_key "agents", "users", on_delete: :cascade
   add_foreign_key "approvals", "agent_steps", on_delete: :cascade
+  add_foreign_key "approvals", "executions", on_delete: :cascade
+  add_foreign_key "approvals", "tasks", on_delete: :cascade
   add_foreign_key "approvals", "users", column: "reviewer_id", on_delete: :nullify
+  add_foreign_key "approvals", "users", on_delete: :nullify
   add_foreign_key "audit_events", "agent_steps", on_delete: :nullify
   add_foreign_key "audit_events", "approvals", on_delete: :nullify
   add_foreign_key "audit_events", "executions", on_delete: :nullify

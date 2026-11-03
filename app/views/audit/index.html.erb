@@ -1,39 +1,164 @@
-<div class="space-y-6">
+<div class="space-y-8">
+  <!-- Top Audit Center Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
     <div>
       <div class="flex items-center space-x-2">
         <h1 class="text-2xl font-black tracking-tight text-[#0d0726] font-sans">Audit Center</h1>
-        <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">POSTGRESQL</span>
+        <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">CRYPTOGRAPHIC HASH-CHAIN</span>
       </div>
       <p class="text-xs text-slate-600 mt-1 font-medium">
-        Chronological, immutable event stream of AI proposals, policy decisions, approvals, and tool results.
+        Tamper-evident, chronological append-only ledger linking every AI proposal, policy check, human approval, and tool execution.
       </p>
     </div>
-    <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-white text-slate-800 border border-slate-300 shadow-2xs">
-      <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-      <span>Tamper-Evident PostgreSQL Store</span>
-    </span>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-white text-slate-800 border border-slate-300 shadow-2xs">
+        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span><%= @filtered_count %> of <%= @total_count %> Events</span>
+      </span>
+    </div>
   </div>
 
-  <div class="p-6 sm:p-8 rounded-2xl bg-white border border-slate-300 shadow-xs space-y-4">
-    <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-4">
-      <div>
-        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726]">Audit Event Stream</h2>
-        <p class="text-xs text-slate-600 font-medium mt-0.5">Real-time event logging via Turbo Streams</p>
+  <!-- Interactive Cryptographic Integrity Verification Banner -->
+  <div id="integrity_verification_banner" class="p-5 rounded-2xl bg-[#0d0726] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm border border-black">
+    <div class="flex items-start space-x-3.5">
+      <div class="p-2.5 rounded-xl bg-white/10 text-[#d4f90d] shrink-0">
+        <%= vaisastram_mascot_svg(classes: "w-6 h-6", variant: :light) %>
       </div>
-      <span class="text-[11px] font-mono font-medium text-slate-500">Auto-refreshing</span>
+      <div>
+        <div class="text-xs font-black uppercase tracking-wider text-[#d4f90d] flex items-center space-x-2">
+          <span>Cryptographic Hash-Chain Verification</span>
+          <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/20 text-white">SHA-256 v1</span>
+        </div>
+        <div class="text-xs text-slate-300 mt-0.5">
+          Each event is cryptographically bound to its predecessor via canonical SHA-256 digests. Run on-demand verification across ledger links.
+        </div>
+      </div>
+    </div>
+    <div class="sm:shrink-0">
+      <%= button_to verify_audit_path, method: :post, class: "inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#d4f90d] hover:bg-[#c2e400] text-black text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer shadow-xs" do %>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        <span>Verify Hash Integrity</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Filter Controls Form -->
+  <div class="p-4 rounded-2xl bg-white border border-slate-300 shadow-xs">
+    <%= form_with url: audit_path, method: :get, class: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs" do |f| %>
+      <div>
+        <%= f.label :event_type, "Filter Event Type", class: "block font-mono uppercase tracking-wider text-[10px] text-slate-500 mb-1" %>
+        <%= f.select :event_type, options_for_select([["All Event Types", ""]] + @event_types.map { |t| [t, t] }, @selected_event), {}, class: "w-full rounded-xl border border-slate-300 px-3 py-1.5 bg-white text-xs font-mono focus:ring-2 focus:ring-[#0d0726]" %>
+      </div>
+
+      <div>
+        <%= f.label :actor_type, "Filter Actor Type", class: "block font-mono uppercase tracking-wider text-[10px] text-slate-500 mb-1" %>
+        <%= f.select :actor_type, options_for_select([["All Actors", ""]] + @actor_types.map { |a| [a, a] }, @selected_actor), {}, class: "w-full rounded-xl border border-slate-300 px-3 py-1.5 bg-white text-xs font-mono focus:ring-2 focus:ring-[#0d0726]" %>
+      </div>
+
+      <div>
+        <%= f.label :tool_name, "Filter Tool Name", class: "block font-mono uppercase tracking-wider text-[10px] text-slate-500 mb-1" %>
+        <%= f.text_field :tool_name, value: @selected_tool, placeholder: "e.g. prepare_payment", class: "w-full rounded-xl border border-slate-300 px-3 py-1.5 bg-white text-xs font-mono focus:ring-2 focus:ring-[#0d0726]" %>
+      </div>
+
+      <div class="flex items-end space-x-2">
+        <%= f.submit "Filter Ledger", class: "w-full px-4 py-2 rounded-xl bg-[#0d0726] hover:bg-black text-white text-xs font-bold uppercase tracking-wider cursor-pointer transition shadow-2xs" %>
+        <%= link_to "Reset", audit_path, class: "px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Audit Table -->
+  <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-xs">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200 text-left text-xs font-mono">
+        <thead class="bg-[#f4f3ef] text-slate-700 uppercase tracking-wider font-bold text-[11px]">
+          <tr>
+            <th class="py-3 px-4">Chain / Seq</th>
+            <th class="py-3 px-4">Occurred At</th>
+            <th class="py-3 px-4">Event Type</th>
+            <th class="py-3 px-4">Actor</th>
+            <th class="py-3 px-4">Tool</th>
+            <th class="py-3 px-4">Policy</th>
+            <th class="py-3 px-4">Event Hash (SHA-256)</th>
+            <th class="py-3 px-4 text-right">Context</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-[11px]">
+          <% if @audit_events.any? %>
+            <% @audit_events.each do |event| %>
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-2.5 px-4 font-bold text-slate-800 whitespace-nowrap">
+                  <span class="text-slate-500 text-[10px]"><%= event.chain_id || 'system' %></span>
+                  <span class="block text-slate-900 font-mono">#<%= event.sequence_number || event.id %></span>
+                </td>
+                <td class="py-2.5 px-4 text-slate-500 whitespace-nowrap">
+                  <%= event.occurred_at.strftime("%H:%M:%S.%L") %>
+                </td>
+                <td class="py-2.5 px-4 font-bold">
+                  <span class="px-2 py-0.5 rounded text-[10px] uppercase <%=
+                    case event.event_type
+                    when 'task_created' then 'bg-blue-100 text-blue-900 border border-blue-200'
+                    when 'policy_evaluated' then
+                      event.policy_decision == 'allow' ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : (event.policy_decision == 'require_approval' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-rose-100 text-rose-900 border border-rose-200')
+                    when 'policy_allowed' then 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                    when 'policy_approval_required', 'approval_requested' then 'bg-amber-100 text-amber-900 border border-amber-300'
+                    when 'policy_denied', 'tool_execution_blocked' then 'bg-rose-100 text-rose-900 border border-rose-200'
+                    when 'tool_execution_succeeded', 'approval_approved' then 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                    else 'bg-slate-100 text-slate-800 border border-slate-200'
+                    end %>">
+                    <%= event.event_type %>
+                  </span>
+                </td>
+                <td class="py-2.5 px-4 text-slate-700">
+                  <span class="font-bold text-[#0d0726]"><%= event.actor_type %></span>
+                  <span class="text-[10px] text-slate-500 block truncate max-w-[120px]"><%= event.actor_id %></span>
+                </td>
+                <td class="py-2.5 px-4 text-slate-800 font-bold">
+                  <%= event.tool_name || '—' %>
+                </td>
+                <td class="py-2.5 px-4 uppercase font-bold <%= event.policy_decision == 'allow' ? 'text-emerald-700' : (event.policy_decision == 'require_approval' ? 'text-amber-700' : 'text-rose-700') %>">
+                  <%= event.policy_decision || '—' %>
+                </td>
+                <td class="py-2.5 px-4 text-slate-600 truncate max-w-[180px]" title="Event Hash: <%= event.event_hash %>&#10;Prev Hash: <%= event.prev_event_hash %>">
+                  <%= event.event_hash ? event.event_hash.first(14) + '...' : '—' %>
+                </td>
+                <td class="py-2.5 px-4 text-right whitespace-nowrap">
+                  <% if event.execution_id.present? %>
+                    <%= link_to "Timeline", timeline_execution_path(event.execution_id), class: "text-[10px] font-bold text-slate-700 hover:text-black bg-white px-2 py-1 rounded border border-slate-300 shadow-2xs hover:border-slate-400" %>
+                  <% elsif event.task_id.present? %>
+                    <%= link_to "Task", workspace_path(task_id: event.task_id), class: "text-[10px] font-bold text-slate-700 hover:text-black bg-white px-2 py-1 rounded border border-slate-300" %>
+                  <% else %>
+                    <span class="text-slate-400">—</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="8" class="py-12 text-center text-slate-500 font-sans">
+                No audit events matched the specified filters.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
 
-    <div class="text-center py-14 border border-dashed border-slate-300 rounded-xl bg-[#f4f3ef]/50">
-      <div class="inline-flex h-12 w-12 rounded-full bg-white border border-slate-200 items-center justify-center text-slate-600 mb-3 shadow-2xs">
-        <svg class="w-6 h-6 text-[#0d0726]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+    <!-- Pagination Footer -->
+    <% if @total_pages > 1 %>
+      <div class="p-4 border-t border-dashed border-slate-200 bg-[#faf9f5] flex items-center justify-between font-mono text-xs text-slate-600">
+        <div>Page <%= @page %> of <%= @total_pages %> (<%= @filtered_count %> events)</div>
+        <div class="flex items-center space-x-2">
+          <% if @page > 1 %>
+            <%= link_to "← Previous", audit_path(page: @page - 1, event_type: @selected_event, actor_type: @selected_actor, tool_name: @selected_tool), class: "px-3 py-1 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 font-bold" %>
+          <% end %>
+          <% if @page < @total_pages %>
+            <%= link_to "Next →", audit_path(page: @page + 1, event_type: @selected_event, actor_type: @selected_actor, tool_name: @selected_tool), class: "px-3 py-1 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 font-bold" %>
+          <% end %>
+        </div>
       </div>
-      <h3 class="text-sm font-bold text-slate-900">Audit trail initialized & awaiting events</h3>
-      <p class="text-xs text-slate-600 max-w-sm mx-auto mt-1 leading-relaxed font-medium">
-        Audit events are automatically appended on every proposed step, policy evaluation check, human approval, and tool execution.
-      </p>
-    </div>
+    <% end %>
   </div>
 </div>

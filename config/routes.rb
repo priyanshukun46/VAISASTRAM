@@ -32,6 +32,20 @@ Rails.application.routes.draw do
 
   get "policies", to: "policies#index", as: :policies
   patch "policies/:id/toggle", to: "policies#toggle", as: :toggle_policy
+
+  # Audit Center Routes
   get "audit", to: "audit#index", as: :audit
+  post "audit/verify", to: "audit#verify", as: :verify_audit
+
+  # Execution Timeline & Replay Routes
+  resources :executions, only: [:show] do
+    member do
+      get :timeline
+      get :audit
+      get :replay
+      post :replay
+    end
+  end
+
   get "evaluations", to: "evaluations#index", as: :evaluations
 end

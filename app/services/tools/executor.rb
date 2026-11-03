@@ -73,8 +73,22 @@ module Tools
     end
 
     def execute
+      record_audit_event!(
+        event_type: "tool_requested",
+        actor_type: "system",
+        actor_id: "tool_executor",
+        metadata: { action_key: @action_key }
+      )
+
       # 1. Action Validation
       validate_action!
+
+      record_audit_event!(
+        event_type: "tool_validated",
+        actor_type: "system",
+        actor_id: "tool_executor",
+        metadata: { action_key: @action_key }
+      )
 
       # 2. Independent Policy Engine Evaluation (Strict Security Gate)
       context = Policies::Context.new(
@@ -241,6 +255,13 @@ module Tools
         @execution.update!(status: "blocked")
       end
 
+      record_audit_event!(
+        event_type: "tool_execution_blocked",
+        actor_type: "policy_engine",
+        actor_id: decision.policy_id,
+        metadata: { action_key: @action_key, reason: decision.reason }
+      )
+
       ExecutionResult.new(
         status: "blocked",
         decision: decision,
@@ -298,6 +319,13 @@ module Tools
         @execution.update!(status: "running")
       end
 
+      record_audit_event!(
+        event_type: "tool_execution_started",
+        actor_type: "system",
+        actor_id: "tool_executor",
+        metadata: { action_key: @action_key }
+      )
+
       # Execute verified tool dispatch (Simulated Safe Execution)
       tool_output = dispatch_tool!(@action_key, @arguments)
 
@@ -308,6 +336,13 @@ module Tools
           completed_at: Time.current
         )
       end
+
+      record_audit_event!(
+        event_type: "tool_execution_succeeded",
+        actor_type: "system",
+        actor_id: "tool_executor",
+        metadata: { action_key: @action_key, result: tool_output }
+      )
 
       ExecutionResult.new(
         status: "completed",
@@ -330,6 +365,14 @@ module Tools
       if @execution.present?
         @execution.update!(status: "failed", error_message: err.message)
       end
+
+      record_audit_event!(
+        event_type: "tool_execution_failed",
+        actor_type: "system",
+        actor_id: "tool_executor",
+        metadata: { action_key: @action_key, error: err.message },
+        security_critical: false
+      )
 
       ExecutionResult.new(
         status: "failed",
@@ -385,20 +428,23 @@ module Tools
       end
     end
 
-    def record_audit_event!(event_type:, actor_type:, actor_id:, approval: nil, metadata: {})
-      AuditEvent.create!(
+    def record_audit_event!(event_type:, actor_type:, actor_id:, approval: nil, metadata: {}, security_critical: true)
+      Audit::Recorder.record!(
         user: @user,
+        task: @task,
         execution: @execution,
         agent_step: @step,
         approval: approval,
         event_type: event_type,
         actor_type: actor_type,
         actor_id: actor_id,
-        occurred_at: Time.current,
-        metadata: metadata
+        tool_name: @action_key,
+        metadata: metadata,
+        security_critical: security_critical
       )
     rescue StandardError => e
       Rails.logger.error("[VAISASTRAM Executor Audit Error] #{e.message}")
+      raise if security_critical
     end
   end
 end

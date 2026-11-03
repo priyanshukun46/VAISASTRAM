@@ -1,0 +1,187 @@
+<div class="space-y-8">
+  <!-- Header with Execution Overview & Navigation -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
+    <div class="flex items-center space-x-3">
+      <%= link_to workspace_path(task_id: @task.id), class: "p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-black hover:border-slate-300 transition shadow-2xs" do %>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      <% end %>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-xl font-black tracking-tight text-[#0d0726]">Execution Timeline</h1>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">#<%= @execution.id %></span>
+          <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded <%= @execution.status == 'completed' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : (@execution.status == 'paused' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-800') %>">
+            <%= @execution.status %>
+          </span>
+        </div>
+        <p class="text-xs text-slate-600 mt-0.5 font-medium">
+          Task: <strong><%= @task.title %></strong> · Agent: <%= @agent.name %>
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions: Replay, Audit Table -->
+    <div class="flex items-center space-x-2">
+      <%= link_to replay_execution_path(@execution), class: "inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#0d0726] hover:bg-black text-[#d4f90d] text-xs font-mono font-bold uppercase tracking-wider transition shadow-xs" do %>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Replay &amp; Compare</span>
+      <% end %>
+      <%= link_to audit_execution_path(@execution), class: "inline-flex items-center space-x-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 hover:text-black text-xs font-bold transition shadow-2xs" do %>
+        <span>Raw Events</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Hash-Chain Integrity Status Card -->
+  <div class="p-4 rounded-2xl border <%= @integrity_report.valid? ? 'bg-emerald-50/60 border-emerald-300' : 'bg-rose-50 border-rose-300' %> flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+    <div class="flex items-center space-x-3">
+      <div class="h-9 w-9 rounded-xl flex items-center justify-center <%= @integrity_report.valid? ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white' %> shrink-0">
+        <% if @integrity_report.valid? %>
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        <% else %>
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        <% end %>
+      </div>
+      <div>
+        <div class="text-xs font-mono font-bold uppercase tracking-wider <%= @integrity_report.valid? ? 'text-emerald-900' : 'text-rose-900' %>">
+          <%= @integrity_report.valid? ? 'Cryptographic Hash Chain Verified' : 'Integrity Violations Detected' %>
+        </div>
+        <div class="text-[11px] text-slate-600 font-medium">
+          Chain: <span class="font-mono">execution:<%= @execution.id %></span> ·
+          <%= @integrity_report.verified_count %> verified links ·
+          Version: <span class="font-mono">SHA-256 v1</span>
+        </div>
+      </div>
+    </div>
+    <div class="text-right font-mono text-[11px] text-slate-500">
+      Tamper-evident append-only ledger
+    </div>
+  </div>
+
+  <!-- Visual Timeline -->
+  <div class="relative pl-6 sm:pl-8 border-l-2 border-slate-300 space-y-6">
+    <% @events.each_with_index do |event, idx| %>
+      <div class="relative group">
+        <!-- Connecting Bullet Dot -->
+        <div class="absolute -left-[31px] sm:-left-[39px] top-1.5 h-4 w-4 rounded-full border-2 border-white shadow-xs <%=
+          case event.event_type
+          when 'task_created' then 'bg-blue-600'
+          when 'plan_generated', 'plan_validated' then 'bg-indigo-600'
+          when 'policy_evaluated' then
+            event.policy_decision == 'allow' ? 'bg-emerald-600' : (event.policy_decision == 'require_approval' ? 'bg-amber-500 animate-pulse' : 'bg-rose-600')
+          when 'policy_allowed' then 'bg-emerald-600'
+          when 'policy_approval_required', 'approval_requested' then 'bg-amber-500 animate-pulse'
+          when 'policy_denied', 'tool_execution_blocked', 'task_failed' then 'bg-rose-600'
+          when 'approval_approved' then 'bg-emerald-600'
+          when 'approval_rejected' then 'bg-rose-600'
+          when 'tool_execution_succeeded' then 'bg-emerald-600'
+          else 'bg-[#0d0726]'
+          end %>">
+        </div>
+
+        <!-- Event Box -->
+        <div class="rounded-2xl border border-slate-300 bg-white p-4 shadow-2xs hover:border-slate-400 transition">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 pb-2 border-b border-dashed border-slate-100">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                #<%= event.sequence_number || (idx + 1) %>
+              </span>
+
+              <span class="text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded <%=
+                case event.event_type
+                when 'task_created' then 'bg-blue-100 text-blue-900 border border-blue-200'
+                when 'plan_generated', 'plan_validated' then 'bg-indigo-100 text-indigo-900 border border-indigo-200'
+                when 'policy_evaluated' then
+                  event.policy_decision == 'allow' ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : (event.policy_decision == 'require_approval' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-rose-100 text-rose-900 border border-rose-200')
+                when 'policy_allowed' then 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                when 'policy_approval_required', 'approval_requested' then 'bg-amber-100 text-amber-900 border border-amber-300'
+                when 'policy_denied', 'tool_execution_blocked' then 'bg-rose-100 text-rose-900 border border-rose-200'
+                when 'approval_approved', 'tool_execution_succeeded' then 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                when 'approval_rejected' then 'bg-rose-100 text-rose-900 border border-rose-200'
+                else 'bg-slate-100 text-slate-800 border border-slate-200'
+                end %>">
+                <%= event.event_type %>
+              </span>
+
+              <span class="text-xs font-bold text-[#0d0726]">
+                <%= event.actor_type %>: <span class="font-normal text-slate-600"><%= event.actor_id %></span>
+              </span>
+
+              <% if event.tool_name.present? %>
+                <span class="text-[11px] font-mono font-bold text-slate-800 bg-[#faf9f5] px-2 py-0.5 rounded border border-slate-200">
+                  <%= event.tool_name %>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="font-mono text-xs text-slate-500 whitespace-nowrap">
+              <%= event.occurred_at.strftime("%H:%M:%S.%L") %>
+            </div>
+          </div>
+
+          <!-- Highlight Summary based on Event -->
+          <div class="pt-2 text-xs text-slate-700">
+            <% case event.event_type %>
+            <% when "task_created" %>
+              <p class="font-medium">Task submitted with instruction: "<%= event.metadata['title'] || @task.title %>"</p>
+            <% when "ai_provider_selected" %>
+              <p class="font-mono text-[11px] text-slate-600">Provider: <strong><%= event.metadata['provider'] %></strong> (<%= event.metadata['model'] %>)</p>
+            <% when "plan_validated", "plan_generated" %>
+              <p>Plan generated: Mode <strong><%= event.metadata['mode'] %></strong> with <%= event.metadata['steps_count'] || @steps.size %> steps.</p>
+            <% when "policy_evaluated" %>
+              <p>Independent policy evaluation: Decision <strong class="uppercase font-mono <%= event.policy_decision == 'allow' ? 'text-emerald-700' : (event.policy_decision == 'require_approval' ? 'text-amber-700' : 'text-rose-700') %>"><%= event.policy_decision %></strong> — <%= event.metadata['reason'] %></p>
+            <% when "approval_requested" %>
+              <div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-medium">
+                Action requires human approval. Execution paused.
+              </div>
+            <% when "approval_approved" %>
+              <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 font-medium">
+                Approved by reviewer <strong><%= event.metadata['reviewer_name'] %></strong> (<%= event.metadata['reviewer_role'] %>). Resuming execution.
+              </div>
+            <% when "approval_rejected" %>
+              <div class="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 font-medium">
+                Rejected by reviewer: "<%= event.metadata['rejection_reason'] %>"
+              </div>
+            <% when "tool_execution_succeeded" %>
+              <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 font-mono text-[11px]">
+                Tool Output: <%= event.metadata['result'] ? event.metadata['result'].to_json : 'Completed' %>
+              </div>
+            <% else %>
+              <% if event.metadata.present? %>
+                <p class="text-slate-600 font-mono text-[11px]"><%= event.metadata.to_json.truncate(150) %></p>
+              <% end %>
+            <% end %>
+          </div>
+
+          <!-- Expandable Technical & Cryptographic Digest -->
+          <details class="mt-2 pt-2 border-t border-slate-100 text-[11px] font-mono text-slate-500">
+            <summary class="cursor-pointer hover:text-slate-800 transition font-bold select-none">
+              Cryptographic Link &amp; Details
+            </summary>
+            <div class="mt-2 space-y-1 bg-[#faf9f5] p-2.5 rounded-lg border border-slate-200">
+              <div class="truncate">Event Hash: <strong class="text-slate-800"><%= event.event_hash || '—' %></strong></div>
+              <div class="truncate">Prev Hash: <span class="text-slate-600"><%= event.prev_event_hash || '—' %></span></div>
+              <% if event.action_fingerprint.present? %>
+                <div class="truncate">Action Fingerprint: <span class="text-emerald-800 font-bold"><%= event.action_fingerprint %></span></div>
+              <% end %>
+              <% if event.metadata.present? %>
+                <div class="mt-1">
+                  <span class="text-slate-500 block mb-0.5">Metadata Payload:</span>
+                  <pre class="bg-white p-2 rounded border border-slate-200 text-[10px] overflow-x-auto"><%= JSON.pretty_generate(event.metadata) %></pre>
+                </div>
+              <% end %>
+            </div>
+          </details>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

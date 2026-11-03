@@ -290,6 +290,61 @@ class AgentPlannerTest < ActiveSupport::TestCase
     assert_nil result.execution.ai_response_text
   end
 
+  test "rejects AI planner response missing required 'mode' field when plan is invalid" do
+    missing_mode_plan = {
+      "response" => "I will do something",
+      "steps" => [
+        {
+          "step_number" => 1,
+          "action" => "lookup_invoice",
+          "arguments" => { "invoice_id" => "INV-100" },
+          "description" => "Lookup"
+        }
+      ]
+    }
+
+    router = MockRouter.new(missing_mode_plan)
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.failure?
+    assert_equal "SCHEMA_VALIDATION_ERROR", result.execution.error_category
+  end
+
+  test "rejects AI planner response with invalid 'mode' field" do
+    invalid_mode_plan = @valid_plan_data.merge("mode" => "unsupported_mode")
+
+    router = MockRouter.new(invalid_mode_plan)
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.failure?
+    assert_includes result.error_message, "Invalid mode 'unsupported_mode'"
+    assert_equal "SCHEMA_VALIDATION_ERROR", result.execution.error_category
+  end
+
+  test "successfully plans with valid model mode alias such as chat or actions" do
+    chat_plan = {
+      "mode" => "chat",
+      "response" => "Hello, I am VAISASTRAM.",
+      "steps" => []
+    }
+
+    router = MockRouter.new(chat_plan)
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.success?
+    assert_equal "conversation", result.mode
+    assert result.conversation?
+  end
+
+  test "rejects AI planner response with malformed JSON" do
+    router = MockRouter.new(nil, error_to_raise: Ai::ValidationError.new("not valid JSON: unexpected token"))
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.failure?
+    assert_includes result.error_message, "not valid JSON"
+    assert_equal "SCHEMA_VALIDATION_ERROR", result.execution.error_category
+  end
+
   test "14. records complete provider metadata on execution and audit event" do
     custom_metadata = {
       fallback_reason: "Local provider (ollama) failed: connection refused",
@@ -482,5 +537,45 @@ class AgentPlannerTest < ActiveSupport::TestCase
     assert_equal "conversation", result.mode
     assert_includes result.response_text, "Event Sourcing"
     assert_equal 0, result.execution.agent_steps.count
+  end
+
+  test "regression: screenshot scenario - prepares action plan for invoice payment without steps scope error" do
+    payment_task = @user.tasks.create!(
+      agent: @agent,
+      title: "Prepare payment",
+      instruction: "Prepare a payment of ₹5,000 for invoice INV-100.",
+      submitted_at: Time.current
+    )
+
+    ollama_gemma_response = {
+      "mode" => "action_plan",
+      "goal" => "Prepare a payment of ₹5,000 for invoice INV-100",
+      "response" => "I have prepared an execution plan to lookup invoice INV-100 and prepare payment. These steps await Ruby policy evaluation.",
+      "summary" => "Lookup invoice and prepare payment voucher.",
+      "steps" => [
+        {
+          "step_number" => 1,
+          "action" => "lookup_invoice",
+          "arguments" => { "invoice_id" => "INV-100" },
+          "description" => "Retrieve invoice details"
+        },
+        {
+          "step_number" => 2,
+          "action" => "prepare_payment",
+          "arguments" => { "invoice_id" => "INV-100", "amount" => 5000 },
+          "description" => "Prepare payment voucher"
+        }
+      ]
+    }
+
+    router = MockRouter.new(ollama_gemma_response)
+    result = Planning::AgentPlanner.plan(task: payment_task, user: @user, provider_router: router)
+
+    assert result.success?
+    refute result.failure?
+    assert_equal "action_plan", result.mode
+    assert_equal 2, result.steps.size
+    assert_equal "planned", payment_task.reload.status
+    assert_equal "planned", result.execution.status
   end
 end

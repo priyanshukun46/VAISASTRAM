@@ -269,15 +269,20 @@ module Approvals
     end
 
     def record_audit!(event_type:, approval:, actor_type:, actor_id:, metadata: {})
-      AuditEvent.create!(
+      Audit::Recorder.record!(
         user: approval.effective_user,
+        task: approval.effective_task,
         execution: approval.effective_execution,
         agent_step: approval.agent_step,
         approval: approval,
         event_type: event_type,
         actor_type: actor_type,
         actor_id: actor_id,
+        tool_name: approval.effective_tool_name,
+        action_fingerprint: approval.action_fingerprint,
+        status: approval.status,
         occurred_at: Time.current,
+        security_critical: true,
         metadata: metadata.merge(
           approval_id: approval.id,
           task_id: approval.effective_task&.id,
@@ -286,6 +291,7 @@ module Approvals
       )
     rescue StandardError => e
       Rails.logger.error("[VAISASTRAM Approvals Audit Error] #{event_type}: #{e.message}")
+      raise
     end
   end
 end

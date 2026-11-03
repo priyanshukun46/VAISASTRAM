@@ -29,11 +29,14 @@ class PoliciesController < ApplicationController
     policy.update!(enabled: new_status)
 
     # Immutable audit logging for administrative policy modification
-    AuditEvent.create!(
+    Audit::Recorder.record!(
       user: current_user,
       event_type: "policy_modified",
       actor_type: "user",
       actor_id: current_user.email,
+      tool_name: policy.action_key,
+      policy_decision: policy.effect,
+      status: new_status ? "enabled" : "disabled",
       occurred_at: Time.current,
       metadata: {
         policy_id: policy.id,

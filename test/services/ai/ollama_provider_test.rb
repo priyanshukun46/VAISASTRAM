@@ -34,6 +34,7 @@ class AiOllamaProviderTest < ActiveSupport::TestCase
   # Test 1: Ollama successful response
   test "1. successfully parses valid Ollama JSON response" do
     plan_body = {
+      mode: "action_plan",
       goal: "Prepare payment for vendor invoice.",
       response: "I will verify the invoice and prepare a payment request for approval.",
       steps: [
@@ -64,6 +65,7 @@ class AiOllamaProviderTest < ActiveSupport::TestCase
     assert_instance_of Ai::Response, res
     assert_equal "ollama", res.provider
     assert_equal "gemma3:4b", res.model
+    assert_equal "action_plan", res["mode"]
     assert_equal "Prepare payment for vendor invoice.", res["goal"]
     assert_equal "I will verify the invoice and prepare a payment request for approval.", res["response"]
     assert_equal 1, res["steps"].size
@@ -150,5 +152,40 @@ class AiOllamaProviderTest < ActiveSupport::TestCase
     res = @provider.generate("Test prompt")
     assert_equal "Process invoice", res["goal"]
     assert_equal "Plan ready", res["response"]
+  end
+
+  test "parses conversational Ollama response with conversation mode" do
+    conv_body = {
+      mode: "conversation",
+      response: "I am VAISASTRAM, a general-purpose governed AI agent platform.",
+      goal: nil,
+      steps: []
+    }
+
+    ollama_envelope = {
+      model: "gemma3:4b",
+      message: {
+        role: "assistant",
+        content: conv_body.to_json
+      },
+      done: true
+    }.to_json
+
+    @provider.mock_response = Struct.new(:code, :body).new("200", ollama_envelope)
+
+    res = @provider.generate("Who are you?")
+    assert_equal "conversation", res["mode"]
+    assert_includes res["response"], "VAISASTRAM"
+    assert_empty res["steps"]
+  end
+
+  test "includes structured JSON schema in request payload format" do
+    uri = @provider.send(:endpoint_uri)
+    schema = Planning::PlanSchema.json_schema
+    req = @provider.send(:build_http_request, uri, "Test", schema: schema)
+    payload = JSON.parse(req.body)
+
+    assert_equal schema.as_json, payload["format"]
+    assert_includes payload["format"]["required"], "mode"
   end
 end
