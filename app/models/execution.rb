@@ -1,12 +1,14 @@
 class Execution < ApplicationRecord
   STATUSES = %w[pending planning planned running completed failed paused blocked].freeze
-  PROVIDERS = %w[gemini groq].freeze
+  PROVIDERS = %w[ollama gemini groq].freeze
 
   belongs_to :task
   belongs_to :agent
   has_one :user, through: :task
   has_many :agent_steps, -> { order(position: :asc) }, dependent: :destroy
   has_many :audit_events, dependent: :nullify
+
+  alias_attribute :provider_name, :provider
 
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :provider, presence: true
@@ -84,7 +86,20 @@ class Execution < ApplicationRecord
     end
   end
 
+  def mode
+    plan["mode"] || (agent_steps.any? ? "action_plan" : "conversation")
+  end
+
+  def conversation?
+    mode == "conversation"
+  end
+
+  def action_plan?
+    mode == "action_plan"
+  end
+
   def requires_action?
+    return false if conversation?
     plan["requires_action"] == true || agent_steps.any?
   end
 
@@ -98,5 +113,23 @@ class Execution < ApplicationRecord
 
   def explanation_text
     plan["explanation"].presence
+  end
+
+  def local_inference?
+    provider == "ollama"
+  end
+
+  def cloud_inference?
+    %w[gemini groq].include?(provider)
+  end
+
+  def provider_badge_label
+    if fallback_used?
+      "CLOUD FALLBACK — #{provider.upcase}"
+    elsif local_inference?
+      "LOCAL AI — #{ai_model.upcase}"
+    else
+      "CLOUD AI — #{provider.upcase}"
+    end
   end
 end

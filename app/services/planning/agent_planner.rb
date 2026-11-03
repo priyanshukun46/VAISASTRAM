@@ -30,11 +30,14 @@ module Planning
         # 2. State Transition: Planning
         @task.update!(status: "planning")
 
+        init_provider = @provider_router.respond_to?(:primary_provider) ? @provider_router.primary_provider.provider_name : "ollama"
+        init_model = @provider_router.respond_to?(:primary_provider) ? @provider_router.primary_provider.model : "gemma3:4b"
+
         execution = @task.executions.create!(
           agent: @agent,
           status: "planning",
-          provider: "gemini",
-          ai_model: "gemini-2.5-pro",
+          provider: init_provider,
+          ai_model: init_model,
           started_at: Time.current
         )
 
@@ -68,12 +71,16 @@ module Planning
             plan: normalized_plan,
             provider: ai_response.provider,
             ai_model: ai_response.model,
+            inference_duration: ai_response.duration_ms,
+            fallback_used: ai_response.fallback?,
+            fallback_reason: ai_response.metadata[:fallback_reason],
+            retry_count: ai_response.metadata[:retry_count] || 0,
             completed_at: Time.current
           )
 
           @task.update!(status: "planned")
 
-          if normalized_plan["requires_action"]
+          if normalized_plan["mode"] == "action_plan" && normalized_plan["requires_action"]
             normalized_plan["steps"].each do |step_hash|
               steps << execution.agent_steps.create!(
                 position: step_hash["step_number"],
@@ -86,13 +93,15 @@ module Planning
           end
 
           # Immutable Audit Log
+          event_type = normalized_plan["mode"] == "conversation" ? "conversation_replied" : "plan_generated"
           AuditEvent.create!(
             user: @user,
             execution: execution,
-            event_type: "plan_generated",
+            event_type: event_type,
             actor_type: "agent",
             actor_id: @agent.name,
             metadata: {
+              mode: normalized_plan["mode"],
               goal: normalized_plan["goal"],
               requires_action: normalized_plan["requires_action"],
               steps_count: steps.size,
@@ -101,7 +110,9 @@ module Planning
               provider: ai_response.provider,
               model: ai_response.model,
               duration_ms: ai_response.duration_ms,
-              fallback_used: ai_response.fallback?
+              fallback_used: ai_response.fallback?,
+              fallback_reason: ai_response.metadata[:fallback_reason],
+              retry_count: ai_response.metadata[:retry_count] || 0
             }
           )
         end

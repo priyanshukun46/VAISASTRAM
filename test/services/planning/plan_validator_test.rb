@@ -4,6 +4,7 @@ class PlanValidatorTest < ActiveSupport::TestCase
   setup do
     @allowed_tools = %w[lookup_invoice verify_invoice prepare_payment]
     @valid_plan = {
+      "mode" => "action_plan",
       "goal" => "Verify invoice INV-100 and prepare payment",
       "response" => "I will verify invoice INV-100 and prepare a payment voucher for approval.",
       "summary" => "Retrieve and verify the invoice before preparing payment.",
@@ -168,5 +169,87 @@ class PlanValidatorTest < ActiveSupport::TestCase
       end
       assert_includes err.message, "falsely implies actions have already been executed"
     end
+  end
+
+  # =========================================================
+  # Scenario 6, 7, 8: Response Mode Validation
+  # =========================================================
+
+  test "Scenario 6: conversation mode with empty steps succeeds" do
+    conversation_plan = {
+      "mode" => "conversation",
+      "response" => "I am VAISASTRAM, a governed autonomous AI agent platform. How can I help you today?",
+      "goal" => nil,
+      "steps" => []
+    }
+
+    assert Planning::PlanValidator.validate!(conversation_plan, allowed_tools: @allowed_tools)
+  end
+
+  test "Scenario 7: action_plan mode with empty steps fails validation" do
+    empty_action_plan = {
+      "mode" => "action_plan",
+      "goal" => "Prepare invoice payment",
+      "response" => "I will prepare the invoice payment.",
+      "steps" => []
+    }
+
+    err = assert_raises(Planning::ValidationError) do
+      Planning::PlanValidator.validate!(empty_action_plan, allowed_tools: @allowed_tools)
+    end
+    assert_includes err.message, "Plan must contain at least one step"
+  end
+
+  test "Scenario 8: unknown mode fails validation" do
+    unknown_mode_plan = {
+      "mode" => "unknown_mode",
+      "goal" => "Some goal",
+      "response" => "Some response",
+      "steps" => []
+    }
+
+    err = assert_raises(Planning::ValidationError) do
+      Planning::PlanValidator.validate!(unknown_mode_plan, allowed_tools: @allowed_tools)
+    end
+    assert_includes err.message, "Invalid mode 'unknown_mode'"
+  end
+
+  test "rejects conversation mode when steps array is not empty" do
+    invalid_conversation = {
+      "mode" => "conversation",
+      "response" => "Hello there",
+      "goal" => nil,
+      "steps" => [
+        {
+          "step_number" => 1,
+          "action" => "lookup_invoice",
+          "arguments" => { "invoice_id" => "INV-100" }
+        }
+      ]
+    }
+
+    err = assert_raises(Planning::ValidationError) do
+      Planning::PlanValidator.validate!(invalid_conversation, allowed_tools: @allowed_tools)
+    end
+    assert_includes err.message, "Conversation mode must not contain action steps"
+  end
+
+  test "rejects action_plan mode when goal is missing" do
+    invalid_action_plan = {
+      "mode" => "action_plan",
+      "response" => "I will do something.",
+      "steps" => [
+        {
+          "step_number" => 1,
+          "action" => "lookup_invoice",
+          "arguments" => { "invoice_id" => "INV-100" }
+        }
+      ]
+    }
+
+    err = assert_raises(Planning::ValidationError) do
+      Planning::PlanValidator.validate!(invalid_action_plan, allowed_tools: @allowed_tools)
+    end
+    assert_includes err.message, "Missing required field 'goal' in plan"
   end
 end

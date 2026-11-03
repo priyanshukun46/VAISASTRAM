@@ -25,6 +25,7 @@ module Ai
     class TransientError < Error; end
     class TimeoutError < TransientError; end
     class NetworkError < TransientError; end
+    class ConnectionRefusedError < NetworkError; end
     class RateLimitError < TransientError; end # HTTP 429
     class ServerError < TransientError; end    # HTTP 500..599
 
@@ -34,6 +35,7 @@ module Ai
     class InvalidRequestError < FatalError; end # HTTP 400
     class ModelNotFoundError < FatalError; end  # HTTP 404
     class ConfigurationError < FatalError; end  # Missing API keys / config
+    class CloudFallbackDisabledError < FatalError; end
 
     # Validation errors — Unparseable or schema-violating output
     class ValidationError < Error; end
@@ -50,17 +52,19 @@ module Ai
   end
 
   # Export directly into Ai:: namespace for clean caller syntax (e.g. Ai::TimeoutError)
-  Error                   = Errors::Error
-  TransientError          = Errors::TransientError
-  TimeoutError            = Errors::TimeoutError
-  NetworkError            = Errors::NetworkError
-  RateLimitError          = Errors::RateLimitError
-  ServerError             = Errors::ServerError
-  FatalError              = Errors::FatalError
-  AuthenticationError     = Errors::AuthenticationError
-  InvalidRequestError     = Errors::InvalidRequestError
-  ModelNotFoundError      = Errors::ModelNotFoundError
-  ConfigurationError      = Errors::ConfigurationError
-  ValidationError         = Errors::ValidationError
-  AllProvidersFailedError = Errors::AllProvidersFailedError
+  Error                      = Errors::Error
+  TransientError             = Errors::TransientError
+  TimeoutError               = Errors::TimeoutError
+  NetworkError               = Errors::NetworkError
+  ConnectionRefusedError     = Errors::ConnectionRefusedError
+  RateLimitError             = Errors::RateLimitError
+  ServerError                = Errors::ServerError
+  FatalError                 = Errors::FatalError
+  AuthenticationError        = Errors::AuthenticationError
+  InvalidRequestError        = Errors::InvalidRequestError
+  ModelNotFoundError         = Errors::ModelNotFoundError
+  ConfigurationError         = Errors::ConfigurationError
+  CloudFallbackDisabledError = Errors::CloudFallbackDisabledError
+  ValidationError            = Errors::ValidationError
+  AllProvidersFailedError    = Errors::AllProvidersFailedError
 end

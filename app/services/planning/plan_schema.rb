@@ -2,8 +2,10 @@ module Planning
   class PlanSchema
     MAX_STEPS = 10
     MIN_STEPS = 1
+    MODES = %w[conversation action_plan].freeze
 
     ALLOWED_TOP_LEVEL_KEYS = %w[
+      mode
       response
       requires_action
       goal
@@ -19,17 +21,22 @@ module Planning
       schema = {
         type: "object",
         properties: {
+          mode: {
+            type: "string",
+            enum: MODES,
+            description: "Must be 'conversation' for general questions, greetings, or non-actionable inquiries with empty steps []. Must be 'action_plan' for actionable tasks requiring tool actions."
+          },
           response: {
             type: "string",
-            description: "Short, human-readable message for the chat interface. Acknowledge user request, explain planned steps, ask clarifying questions if details are missing, or explain why an action cannot be planned. MUST NEVER claim or imply that actions have already been executed."
+            description: "Short, human-readable message for the chat interface. Acknowledge user request, explain planned steps, ask clarifying questions if details are missing, or answer conversationally. MUST NEVER claim or imply that actions have already been executed."
           },
           requires_action: {
             type: "boolean",
-            description: "True if tool action steps are proposed; false if clarifying information is needed, the request cannot be planned, or it is a conversational inquiry."
+            description: "True if tool action steps are proposed (action_plan mode); false for conversational inquiry."
           },
           goal: {
             type: "string",
-            description: "Concise statement of the overall goal to be accomplished or topic of conversation."
+            description: "Concise statement of the overall goal for action_plan mode; null or empty for conversation mode."
           },
           summary: {
             type: "string",
@@ -70,7 +77,7 @@ module Planning
             }
           }
         },
-        required: ["goal", "response", "steps"]
+        required: ["response", "steps"]
       }
 
       if available_tools.present?

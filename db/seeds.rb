@@ -135,8 +135,8 @@ policies_data.each do |p_data|
 end
 
 # Seed Sample Autonomous Agent
-agent = Agent.find_or_initialize_by(name: "Financial Operations Agent", user: admin)
-agent.description = "Autonomous agent responsible for verifying vendor invoices and preparing audited payment vouchers under strict Ruby governance."
+agent = Agent.find_or_initialize_by(name: "VAISASTRAM Agent", user: admin)
+agent.description = "General-purpose governed autonomous AI agent platform with independent Ruby policy enforcement, conversational reasoning, and allowlisted domain tools."
 agent.status = "active"
 agent.configuration = {
   allowed_tools: ["lookup_invoice", "verify_invoice", "prepare_payment"],

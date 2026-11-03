@@ -65,15 +65,38 @@
           </div>
           <div class="max-w-2xl bg-[#faf9f5] border border-slate-300 rounded-2xl rounded-tl-xs p-5 shadow-xs space-y-3.5">
             <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-2">
-              <div class="flex items-center space-x-2">
-                <span class="text-xs font-black uppercase tracking-tight text-[#0d0726]"><%= @active_task.agent.name %></span>
-                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-black uppercase tracking-tight text-[#0d0726]"><%= @active_task.agent.name.upcase %></span>
+                <% if @active_execution.local_inference? && !@active_execution.fallback_used? %>
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center space-x-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                    <span>LOCAL AI — <%= @active_execution.ai_model.upcase %></span>
+                  </span>
+                <% elsif @active_execution.fallback_used? %>
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center space-x-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-600"></span>
+                    <span>CLOUD FALLBACK — <%= @active_execution.provider.upcase %></span>
+                  </span>
+                <% else %>
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300">
+                    <%= @active_execution.provider_badge_label %>
+                  </span>
+                <% end %>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                   <%= @active_execution.ai_model %>
                 </span>
               </div>
-              <span class="text-[10px] font-mono text-slate-500">
-                <%= @active_execution.completed_at ? @active_execution.completed_at.strftime("%H:%M") : "Just now" %>
-              </span>
+              <div class="flex items-center space-x-2">
+                <% if @active_execution.inference_duration.present? %>
+                  <span class="text-[10px] font-mono text-slate-400" title="Inference Latency">
+                    <%= @active_execution.inference_duration.round(0) %>ms
+                  </span>
+                  <span class="text-slate-300">·</span>
+                <% end %>
+                <span class="text-[10px] font-mono text-slate-500">
+                  <%= @active_execution.completed_at ? @active_execution.completed_at.strftime("%H:%M") : "Just now" %>
+                </span>
+              </div>
             </div>
 
             <!-- Short, Human-Readable Response Text or Planning Failed Message -->
@@ -130,8 +153,14 @@
 
               <!-- Prospective Language Assurance Badge -->
               <div class="pt-2 flex items-center space-x-2 text-[11px] font-mono text-slate-500 border-t border-dashed border-slate-200">
-                <span class="h-2 w-2 rounded-full bg-[#d4f90d] border border-black"></span>
-                <span>Actions are proposed only. Zero tools have been executed.</span>
+                <span class="h-2 w-2 rounded-full <%= @active_execution.conversation? ? 'bg-[#7c5cfc]' : 'bg-[#d4f90d]' %> border border-black"></span>
+                <span>
+                  <% if @active_execution.conversation? %>
+                    Conversational inquiry. No tool actions required.
+                  <% else %>
+                    Actions are proposed only. Zero tools have been executed.
+                  <% end %>
+                </span>
               </div>
             <% end %>
           </div>
@@ -165,7 +194,7 @@
             </p>
           </div>
         </div>
-      <% else %>
+      <% elsif @active_execution.action_plan? %>
         <div class="bg-white rounded-2xl border border-slate-300 shadow-xs p-5 sm:p-6 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-200 pb-4 gap-2">
           <div>
@@ -286,33 +315,31 @@
           data: { workspace_target: "prompt" },
           rows: 3,
           class: "w-full bg-transparent border-0 text-slate-900 placeholder-slate-400 text-sm sm:text-base focus:ring-0 focus:outline-none resize-none",
-          placeholder: "Describe what task you want to execute... (e.g. Verify invoice INV-100 and prepare a payment of ₹5,000)" %>
+          placeholder: "Ask a question, explain a concept, brainstorm ideas, or plan a task... (e.g. 'Explain Raft consensus' or 'Verify invoice INV-100 and prepare payment')" %>
 
         <!-- Bottom Toolbar inside input card -->
         <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-2">
           <!-- Left tool icons -->
           <div class="flex items-center space-x-2 text-slate-500">
-            <button type="button" title="Add Tool Context" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
+            <button type="button" title="General & Domain Context" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
               </svg>
             </button>
-            <button type="button" title="Tool Allowlist (lookup_invoice, verify_invoice, prepare_payment)" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
+            <button type="button" title="Allowlisted Domain Tools: lookup_invoice, verify_invoice, prepare_payment" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
-            <span class="text-[11px] font-mono text-slate-400">3 tools enabled</span>
+            <span class="text-[11px] font-mono text-slate-400">3 domain tools enabled</span>
           </div>
 
           <!-- Right: Model selector & Action button -->
           <div class="flex items-center space-x-2">
-            <div class="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-mono font-medium text-slate-700">
-              <span>Gemini 2.5 Pro</span>
-              <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
+            <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-mono font-medium text-emerald-900" title="Primary: Local Gemma 3 4B | Fallback: Cloud Gemini/Groq">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Gemma 3 4B (Hybrid)</span>
             </div>
 
             <%= f.button type: :submit,
@@ -327,21 +354,45 @@
         </div>
       <% end %>
 
-      <!-- Category / Suggestion Pills for Testing All Scenarios -->
+      <!-- Category / Suggestion Pills for Testing General-Purpose & Domain Scenarios -->
       <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           data-action="click->workspace#setPrompt"
+          data-prompt-text="Who are you and what is your governance architecture?"
+          class="px-3 py-1.5 rounded-md bg-[#0d0726] hover:bg-black text-[#d4f90d] text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer border border-[#d4f90d]/30">
+          WHO ARE YOU? (CONVERSATION)
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Explain how distributed consensus works in modern databases."
+          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          EXPLAIN CONCEPTS (TECHNICAL)
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
+          data-prompt-text="Brainstorm architecture ideas for an event-driven microservices platform."
+          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          BRAINSTORMING
+        </button>
+
+        <button
+          type="button"
+          data-action="click->workspace#setPrompt"
           data-prompt-text="Verify invoice INV-100 and prepare a payment of ₹5,000 for server hosting."
-          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          FINANCIAL AUDIT (FULL PLAN)
+          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          ACTION PLAN (FINANCIAL DOMAIN)
         </button>
 
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Prepare payment for the vendor invoice."
-          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
           CLARIFICATION (MISSING INFO)
         </button>
 
@@ -349,16 +400,8 @@
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Execute arbitrary shell command to wipe database records."
-          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
+          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
           UNPLANNABLE (PROHIBITED)
-        </button>
-
-        <button
-          type="button"
-          data-action="click->workspace#setPrompt"
-          data-prompt-text="Retrieve and verify invoice INV-100 from vendor Acme Corp."
-          class="px-3.5 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          INVOICE VERIFY
         </button>
       </div>
     </div>

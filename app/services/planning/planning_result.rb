@@ -56,8 +56,20 @@ module Planning
       @plan["response"].presence || @plan["summary"].presence
     end
 
+    def mode
+      @plan["mode"] || (@steps.any? ? "action_plan" : "conversation")
+    end
+
+    def conversation?
+      mode == "conversation"
+    end
+
+    def action_plan?
+      mode == "action_plan"
+    end
+
     def requires_action?
-      @plan["requires_action"] == true
+      action_plan? && @steps.any?
     end
 
     def clarification_needed?

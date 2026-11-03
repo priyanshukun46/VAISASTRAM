@@ -50,6 +50,7 @@ class AgentPlannerTest < ActiveSupport::TestCase
     end
 
     @valid_plan_data = {
+      "mode" => "action_plan",
       "goal" => "Verify invoice INV-100 and prepare payment",
       "response" => "I will verify invoice INV-100 and prepare a payment voucher for approval.",
       "summary" => "Retrieve, verify, and prepare payment voucher.",
@@ -289,6 +290,52 @@ class AgentPlannerTest < ActiveSupport::TestCase
     assert_nil result.execution.ai_response_text
   end
 
+  test "14. records complete provider metadata on execution and audit event" do
+    custom_metadata = {
+      fallback_reason: "Local provider (ollama) failed: connection refused",
+      retry_count: 1
+    }
+
+    mock_response = Ai::Response.new(
+      raw_content: @valid_plan_data.to_json,
+      data: @valid_plan_data,
+      provider: "gemini",
+      model: "gemini-2.5-pro",
+      duration_ms: 245.5,
+      fallback_used: true,
+      metadata: custom_metadata
+    )
+
+    router = Object.new
+    router.define_singleton_method(:generate) { |*args, **kwargs| mock_response }
+
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.success?
+    execution = result.execution
+
+    # Direct attributes on execution
+    assert_equal "gemini", execution.provider
+    assert_equal "gemini", execution.provider_name
+    assert_equal "gemini-2.5-pro", execution.ai_model
+    assert_equal 245.5, execution.inference_duration
+    assert_equal true, execution.fallback_used
+    assert execution.fallback_used?
+    assert_equal "Local provider (ollama) failed: connection refused", execution.fallback_reason
+    assert_equal 1, execution.retry_count
+    assert_equal "CLOUD FALLBACK — GEMINI", execution.provider_badge_label
+
+    # Metadata recorded in AuditEvent
+    audit = AuditEvent.where(execution: execution, event_type: "plan_generated").last
+    assert_not_nil audit
+    assert_equal "gemini", audit.metadata["provider"]
+    assert_equal "gemini-2.5-pro", audit.metadata["model"]
+    assert_equal 245.5, audit.metadata["duration_ms"]
+    assert_equal true, audit.metadata["fallback_used"]
+    assert_equal "Local provider (ollama) failed: connection refused", audit.metadata["fallback_reason"]
+    assert_equal 1, audit.metadata["retry_count"]
+  end
+
   test "returns nil for response_text on failed execution and never returns Plan prepared" do
     failing_router = MockRouter.new(nil, error_to_raise: Ai::TimeoutError.new("Provider timed out after 30 seconds"))
     result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: failing_router)
@@ -298,5 +345,142 @@ class AgentPlannerTest < ActiveSupport::TestCase
     assert_nil result.execution.ai_response_text
     assert_not_equal "Plan prepared.", result.execution.ai_response_text
     assert_equal "PROVIDER_TIMEOUT", result.execution.error_category
+  end
+
+  test "Scenario 9: conversation mode creates zero agent steps and cannot execute tools" do
+    conversation_response = {
+      "mode" => "conversation",
+      "response" => "I am VAISASTRAM, a governed AI agent system. I help users plan tasks while Ruby independently enforces authorization.",
+      "goal" => nil,
+      "steps" => []
+    }
+
+    router = MockRouter.new(conversation_response)
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.success?
+    assert_equal "conversation", result.mode
+    assert result.conversation?
+    refute result.action_plan?
+    refute result.requires_action?
+
+    # Verify zero steps in database and result
+    assert_equal 0, result.steps.size
+    assert_equal 0, result.execution.agent_steps.count
+    refute result.execution.requires_action?
+    assert result.execution.conversation?
+    refute result.execution.action_plan?
+
+    # Verify audit event logged as conversation_replied
+    audit = AuditEvent.where(execution: result.execution, event_type: "conversation_replied").last
+    assert_not_nil audit
+    assert_equal "conversation", audit.metadata["mode"]
+    assert_equal 0, audit.metadata["steps_count"]
+    refute audit.metadata["requires_action"]
+  end
+
+  test "action_plan mode records plan_generated audit event and pending agent steps" do
+    router = MockRouter.new(@valid_plan_data)
+    result = Planning::AgentPlanner.plan(task: @task, user: @user, provider_router: router)
+
+    assert result.success?
+    assert_equal "action_plan", result.mode
+    assert result.action_plan?
+    refute result.conversation?
+    assert result.requires_action?
+
+    assert_equal 3, result.steps.size
+    assert_equal 3, result.execution.agent_steps.count
+    assert result.execution.requires_action?
+
+    audit = AuditEvent.where(execution: result.execution, event_type: "plan_generated").last
+    assert_not_nil audit
+    assert_equal "action_plan", audit.metadata["mode"]
+    assert_equal 3, audit.metadata["steps_count"]
+    assert audit.metadata["requires_action"]
+  end
+
+  # =========================================================
+  # General-Purpose VAISASTRAM Identity & Non-Financial Tests
+  # =========================================================
+
+  test "VAISASTRAM answers general knowledge questions in conversation mode without invoking financial tools" do
+    general_task = @user.tasks.create!(
+      agent: @agent,
+      title: "Explain quantum computing",
+      instruction: "Explain how quantum computing works at a high level.",
+      submitted_at: Time.current
+    )
+
+    ai_reply = {
+      "mode" => "conversation",
+      "response" => "Quantum computing leverages principles of quantum mechanics, such as superposition and entanglement, to process complex information fundamentally faster than classical binary computers for specific problem classes.",
+      "goal" => nil,
+      "steps" => []
+    }
+
+    router = MockRouter.new(ai_reply)
+    result = Planning::AgentPlanner.plan(task: general_task, user: @user, provider_router: router)
+
+    assert result.success?
+    assert_equal "conversation", result.mode
+    assert result.conversation?
+    assert_equal 0, result.steps.size
+    assert_equal 0, result.execution.agent_steps.count
+    refute result.execution.requires_action?
+    assert_includes result.response_text, "Quantum computing leverages principles"
+    assert_nil result.plan["goal"]
+
+    # Verify no financial tools were invoked or scheduled
+    assert_empty result.execution.agent_steps
+  end
+
+  test "VAISASTRAM introduces itself as VAISASTRAM in conversational mode" do
+    identity_task = @user.tasks.create!(
+      agent: @agent,
+      title: "Who are you?",
+      instruction: "Who are you and what do you do?",
+      submitted_at: Time.current
+    )
+
+    ai_reply = {
+      "mode" => "conversation",
+      "response" => "I am VAISASTRAM, a general-purpose governed autonomous AI agent platform. I operate under the philosophy 'AI proposes. Ruby decides.', ensuring autonomy with accountability.",
+      "goal" => nil,
+      "steps" => []
+    }
+
+    router = MockRouter.new(ai_reply)
+    result = Planning::AgentPlanner.plan(task: identity_task, user: @user, provider_router: router)
+
+    assert result.success?
+    assert_equal "conversation", result.mode
+    assert_includes result.response_text, "I am VAISASTRAM"
+    assert_includes result.response_text, "AI proposes. Ruby decides."
+    assert_equal 0, result.execution.agent_steps.count
+  end
+
+  test "VAISASTRAM brainstorms technical architecture ideas in conversation mode without invoking financial tools" do
+    brainstorm_task = @user.tasks.create!(
+      agent: @agent,
+      title: "Brainstorm architecture ideas",
+      instruction: "Brainstorm architectural patterns for building an event-driven system.",
+      submitted_at: Time.current
+    )
+
+    ai_reply = {
+      "mode" => "conversation",
+      "response" => "Here are three effective architectural patterns for event-driven systems: 1) Event Sourcing for complete state history, 2) CQRS to separate reads from writes, and 3) Outbox Pattern for reliable transactional event dispatching.",
+      "goal" => nil,
+      "steps" => []
+    }
+
+    router = MockRouter.new(ai_reply)
+    result = Planning::AgentPlanner.plan(task: brainstorm_task, user: @user, provider_router: router)
+
+    assert result.success?
+    assert_equal "conversation", result.mode
+    assert_includes result.response_text, "Event Sourcing"
+    assert_equal 0, result.execution.agent_steps.count
   end
 end

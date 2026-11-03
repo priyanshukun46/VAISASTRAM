@@ -3,14 +3,49 @@ module Ai
     DEFAULT_MAX_RETRIES = 1
     DEFAULT_RETRY_DELAY = 0.05
 
-    attr_reader :primary_provider, :fallback_provider, :attempts, :max_retries, :retry_delay
+    attr_reader :local_provider, :cloud_primary_provider, :cloud_fallback_provider,
+                :mode, :cloud_fallback_enabled, :attempts, :max_retries, :retry_delay
 
-    def initialize(primary_provider: nil, fallback_provider: nil, max_retries: DEFAULT_MAX_RETRIES, retry_delay: DEFAULT_RETRY_DELAY)
-      @primary_provider = primary_provider || Ai::GeminiProvider.new
-      @fallback_provider = fallback_provider || Ai::GroqProvider.new
+    def initialize(
+      local_provider: nil,
+      cloud_primary_provider: nil,
+      cloud_fallback_provider: nil,
+      primary_provider: nil,
+      fallback_provider: nil,
+      mode: nil,
+      cloud_fallback_enabled: nil,
+      max_retries: DEFAULT_MAX_RETRIES,
+      retry_delay: DEFAULT_RETRY_DELAY
+    )
+      @mode = (mode || ENV.fetch("AI_PROVIDER_MODE", "hybrid")).to_s.downcase
+      @cloud_fallback_enabled = if cloud_fallback_enabled.nil?
+        ENV.fetch("AI_CLOUD_FALLBACK_ENABLED", "true").to_s.downcase == "true"
+      else
+        ActiveModel::Type::Boolean.new.cast(cloud_fallback_enabled)
+      end
+
+      if local_provider.nil? && primary_provider.present? && cloud_primary_provider.nil?
+        # Backwards-compatibility with 2-tier tests that passed primary_provider and fallback_provider
+        @local_provider = primary_provider
+        @cloud_primary_provider = fallback_provider
+        @cloud_fallback_provider = nil
+      else
+        @local_provider = local_provider || Ai::OllamaProvider.new
+        @cloud_primary_provider = cloud_primary_provider || primary_provider || Ai::GeminiProvider.new
+        @cloud_fallback_provider = cloud_fallback_provider || fallback_provider || Ai::GroqProvider.new
+      end
+
       @max_retries = max_retries
       @retry_delay = retry_delay
       @attempts = []
+    end
+
+    def primary_provider
+      run_local_tier? ? @local_provider : @cloud_primary_provider
+    end
+
+    def fallback_provider
+      @cloud_fallback_provider || @cloud_primary_provider
     end
 
     def self.generate(prompt, options = {})
@@ -19,73 +54,137 @@ module Ai
 
     def generate(prompt, options = {})
       @attempts = []
-      expected_schema = options[:schema]
+      last_error = nil
 
-      # 1. Attempt Primary Provider with Bounded Retries on Transient Errors
-      primary_retries = 0
-      last_primary_error = nil
+      # Tier 1: Local Inference (Ollama)
+      if run_local_tier?
+        response, err, _retries = execute_with_retries(
+          @local_provider,
+          prompt,
+          options,
+          fallback_used: false,
+          fallback_reason: nil
+        )
+        return response if response.present?
 
-      loop do
-        begin
-          response = execute_provider(@primary_provider, prompt, options, fallback_used: false)
-          return validate_and_return!(response, expected_schema)
-        rescue Ai::TransientError => e
-          last_primary_error = e
-          record_failure(@primary_provider, e)
+        last_error = err
+        Rails.logger.warn("[AI ProviderRouter] Local provider #{@local_provider.provider_name} failed: #{err.message}.")
 
-          if primary_retries < @max_retries
-            primary_retries += 1
-            Rails.logger.warn("[AI ProviderRouter] Primary provider #{@primary_provider.provider_name} transient error: #{e.message}. Retrying (#{primary_retries}/#{@max_retries})...")
-            sleep(@retry_delay) if @retry_delay.positive?
-          else
-            Rails.logger.warn("[AI ProviderRouter] Primary provider #{@primary_provider.provider_name} failed after #{primary_retries} retries: #{e.message}. Initiating fallback to #{@fallback_provider.provider_name}...")
-            break
-          end
+        # If cloud fallback is disabled or mode is strictly local, do not contact cloud
+        unless cloud_fallback_permitted?
+          raise Ai::CloudFallbackDisabledError.new(
+            "Local inference (#{@local_provider.provider_name}) failed and cloud fallback is disabled: #{err.message}",
+            provider: @local_provider.provider_name,
+            raw_response: err.raw_response
+          )
         end
       end
 
-      # 2. Attempt Fallback Provider (Groq) with Identical Logical Request
-      begin
-        response = execute_provider(@fallback_provider, prompt, options, fallback_used: true)
-        validate_and_return!(response, expected_schema)
-      rescue Ai::Error => fallback_err
-        record_failure(@fallback_provider, fallback_err)
-        Rails.logger.error("[AI ProviderRouter] Fallback provider #{@fallback_provider.provider_name} also failed: #{fallback_err.message}")
+      # Tier 2: Cloud Primary (Gemini)
+      if @cloud_primary_provider.present?
+        fallback_reason = if run_local_tier?
+          "Local provider (#{@local_provider.provider_name}) failed: #{last_error&.message}"
+        end
 
-        raise Ai::AllProvidersFailedError.new(
-          "All AI providers failed. Primary (#{@primary_provider.provider_name}): #{last_primary_error&.message}; Fallback (#{@fallback_provider.provider_name}): #{fallback_err.message}",
-          attempts: @attempts
+        response, err, _retries = execute_with_retries(
+          @cloud_primary_provider,
+          prompt,
+          options,
+          fallback_used: run_local_tier?,
+          fallback_reason: fallback_reason
         )
+        return response if response.present?
+
+        last_error = err
+        Rails.logger.warn("[AI ProviderRouter] Cloud primary provider #{@cloud_primary_provider.provider_name} failed: #{err.message}.")
       end
+
+      # Tier 3: Cloud Fallback (Groq)
+      if @cloud_fallback_provider.present?
+        fallback_reason = "Prior providers failed. Last: #{last_error&.message}"
+        response, err, _retries = execute_with_retries(
+          @cloud_fallback_provider,
+          prompt,
+          options,
+          fallback_used: true,
+          fallback_reason: fallback_reason
+        )
+        return response if response.present?
+
+        last_error = err
+        Rails.logger.error("[AI ProviderRouter] Cloud fallback provider #{@cloud_fallback_provider.provider_name} failed: #{err.message}.")
+      end
+
+      # Exhausted all available providers
+      raise Ai::AllProvidersFailedError.new(
+        "All AI providers failed. Last error: #{last_error&.message}",
+        attempts: @attempts
+      )
     end
 
     private
 
-    def execute_provider(provider, prompt, options, fallback_used:)
+    def run_local_tier?
+      @mode != "cloud" && @local_provider.present?
+    end
+
+    def cloud_fallback_permitted?
+      @mode != "local" && @cloud_fallback_enabled
+    end
+
+    def execute_with_retries(provider, prompt, options, fallback_used:, fallback_reason: nil)
+      retries = 0
+      loop do
+        begin
+          res = execute_provider(
+            provider,
+            prompt,
+            options,
+            fallback_used: fallback_used,
+            fallback_reason: fallback_reason,
+            retry_count: retries
+          )
+          validated = validate_and_return!(res, options[:schema])
+          return [validated, nil, retries]
+        rescue Ai::TransientError => e
+          record_failure(provider, e)
+          if retries < @max_retries
+            retries += 1
+            Rails.logger.warn("[AI ProviderRouter] #{provider.provider_name} transient error: #{e.message}. Retrying (#{retries}/#{@max_retries})...")
+            sleep(@retry_delay) if @retry_delay.positive?
+          else
+            Rails.logger.warn("[AI ProviderRouter] #{provider.provider_name} failed after #{retries} retries: #{e.message}.")
+            return [nil, e, retries]
+          end
+        end
+      end
+    end
+
+    def execute_provider(provider, prompt, options, fallback_used:, fallback_reason: nil, retry_count: 0)
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       response = provider.generate(prompt, options)
       duration_ms = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000.0
 
       record_success(provider, duration_ms: duration_ms, fallback_used: fallback_used)
 
-      # Mark fallback_used on response if applicable
-      if fallback_used
-        Ai::Response.new(
-          raw_content: response.raw_content,
-          data: response.data,
-          provider: response.provider,
-          model: response.model,
-          duration_ms: duration_ms,
-          fallback_used: true,
-          metadata: response.metadata.merge(router_attempts: @attempts)
-        )
-      else
-        response
-      end
+      metadata = response.metadata.merge(
+        router_attempts: @attempts,
+        fallback_reason: fallback_reason,
+        retry_count: retry_count
+      )
+
+      Ai::Response.new(
+        raw_content: response.raw_content,
+        data: response.data,
+        provider: response.provider,
+        model: response.model,
+        duration_ms: duration_ms,
+        fallback_used: fallback_used,
+        metadata: metadata
+      )
     end
 
     def validate_and_return!(response, expected_schema)
-      # Validate structured response
       Ai::ResponseValidator.validate!(response, expected_schema)
       response
     end

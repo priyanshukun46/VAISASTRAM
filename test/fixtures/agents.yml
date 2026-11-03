@@ -1,13 +1,13 @@
 financial_agent:
   user: one
-  name: "Invoice Auditor"
-  description: "Audits invoices and drafts payments"
+  name: "VAISASTRAM Agent"
+  description: "General-purpose governed autonomous AI agent platform with independent Ruby policy enforcement, conversational reasoning, and allowlisted domain tools."
   status: "active"
   configuration: <%= { model: "gemini-2.5-pro", allowed_tools: ["lookup_invoice", "verify_invoice", "prepare_payment"] }.to_json %>
 
 admin_agent:
   user: two
-  name: "Master Financial Agent"
-  description: "Global agent for admin operations"
+  name: "VAISASTRAM Agent"
+  description: "General-purpose governed autonomous AI agent platform with independent Ruby policy enforcement, conversational reasoning, and allowlisted domain tools."
   status: "active"
   configuration: <%= { model: "gemini-2.5-pro", allowed_tools: ["lookup_invoice", "verify_invoice", "prepare_payment"] }.to_json %>

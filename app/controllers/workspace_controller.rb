@@ -1,7 +1,15 @@
 class WorkspaceController < ApplicationController
   def index
     @agents = Agent.where(user: current_user).or(Agent.where(user: nil)).order(:id)
-    @selected_agent = @agents.find_by(id: params[:agent_id]) || @agents.first || Agent.first
+    @selected_agent = @agents.find_by(id: params[:agent_id]) || @agents.find_by(name: "VAISASTRAM Agent") || @agents.first || Agent.first
+    unless @selected_agent
+      @selected_agent = Agent.create!(
+        user: current_user,
+        name: "VAISASTRAM Agent",
+        description: "General-purpose governed autonomous AI agent platform with independent Ruby policy enforcement, conversational reasoning, and allowlisted domain tools.",
+        configuration: { "allowed_tools" => ["lookup_invoice", "verify_invoice", "prepare_payment"] }
+      )
+    end
     @recent_tasks = current_user.tasks.order(created_at: :desc).limit(10).includes(executions: :agent_steps)
     @active_task = @recent_tasks.find_by(id: params[:task_id]) || @recent_tasks.first
     @active_execution = @active_task&.executions&.order(created_at: :desc)&.first
@@ -14,12 +22,12 @@ class WorkspaceController < ApplicationController
       return
     end
 
-    agent = Agent.find_by(id: params[:agent_id]) || current_user.agents.first || Agent.first
+    agent = Agent.find_by(id: params[:agent_id]) || current_user.agents.find_by(name: "VAISASTRAM Agent") || current_user.agents.first || Agent.find_by(name: "VAISASTRAM Agent") || Agent.first
     unless agent
       agent = Agent.create!(
         user: current_user,
-        name: "Financial Operations Agent",
-        description: "Autonomous financial and accounting workflow agent with strict policy governance.",
+        name: "VAISASTRAM Agent",
+        description: "General-purpose governed autonomous AI agent platform with independent Ruby policy enforcement, conversational reasoning, and allowlisted domain tools.",
         configuration: { "allowed_tools" => ["lookup_invoice", "verify_invoice", "prepare_payment"] }
       )
     end

@@ -28,7 +28,9 @@ module Ai
       parse_provider_response(response, duration_ms: duration_ms)
     rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
       raise Ai::TimeoutError.new("Request to #{provider_name} timed out after #{@timeout}s: #{e.message}", provider: provider_name)
-    rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH, OpenSSL::SSL::SSLError => e
+    rescue Errno::ECONNREFUSED => e
+      raise Ai::ConnectionRefusedError.new("Connection refused to #{provider_name}: #{e.message}", provider: provider_name)
+    rescue SocketError, Errno::EHOSTUNREACH, OpenSSL::SSL::SSLError => e
       raise Ai::NetworkError.new("Network failure connecting to #{provider_name}: #{e.message}", provider: provider_name)
     end
 
@@ -110,7 +112,12 @@ module Ai
     def sanitize_error_body(body)
       parsed = JSON.parse(body) rescue nil
       if parsed.is_a?(Hash)
-        error_msg = parsed.dig("error", "message") || parsed["message"] || parsed["error"]
+        error_val = parsed["error"]
+        error_msg = if error_val.is_a?(Hash)
+          error_val["message"]
+        elsif error_val.is_a?(String)
+          error_val
+        end || parsed["message"]
         return error_msg.to_s.truncate(200) if error_msg.present?
       end
       body.truncate(200)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_170001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_04_014800) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -103,6 +103,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_170001) do
     t.text "error_message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.float "inference_duration"
+    t.boolean "fallback_used", default: false, null: false
+    t.text "fallback_reason"
+    t.integer "retry_count", default: 0, null: false
     t.index ["agent_id"], name: "index_executions_on_agent_id"
     t.index ["ai_model"], name: "index_executions_on_ai_model"
     t.index ["provider"], name: "index_executions_on_provider"
