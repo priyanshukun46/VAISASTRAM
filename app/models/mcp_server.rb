@@ -119,12 +119,12 @@ class McpServer < ApplicationRecord
   end
 
   def normalize_arguments
-    if arguments.is_a?(String)
+    if arguments.is_a?(String) && arguments.strip.start_with?("[")
       begin
         parsed = JSON.parse(arguments)
-        self.arguments = parsed.is_a?(Array) ? parsed : [arguments]
+        self.arguments = parsed if parsed.is_a?(Array)
       rescue JSON::ParserError
-        self.arguments = Shellwords.split(arguments) rescue arguments.split
+        # Keep raw string so validation rejects non-array input
       end
     elsif arguments.nil?
       self.arguments = []

@@ -381,8 +381,12 @@ module Tools
       )
     end
 
-    # Safe simulated tool implementations (governed sandbox)
+    # Safe simulated tool implementations and dynamic MCP tool dispatch
     def dispatch_tool!(action_key, args)
+      if action_key.to_s.start_with?("mcp.")
+        return dispatch_mcp_tool!(action_key, args)
+      end
+
       case action_key
       when "retrieve_invoice", "lookup_invoice"
         invoice_id = args["invoice_id"] || args[:invoice_id] || "INV-100"
@@ -426,6 +430,23 @@ module Tools
       else
         raise ExecutionError, "Unsupported tool handler for '#{action_key}'"
       end
+    end
+
+    def dispatch_mcp_tool!(action_key, args)
+      mcp_tool = McpTool.find_by(namespaced_tool_key: action_key)
+      if mcp_tool.nil? || mcp_tool.mcp_server.nil?
+        raise ExecutionError, "MCP tool '#{action_key}' is not registered or its server has been removed"
+      end
+
+      server = mcp_tool.mcp_server
+      unless server.enabled? && mcp_tool.enabled?
+        raise ExecutionError, "MCP tool '#{action_key}' is disabled by administrative policy"
+      end
+
+      # Strip internal security tracking fields from tool arguments before external invocation
+      clean_args = args.reject { |k, _| k.to_s.start_with?("_mcp_") }
+
+      Mcp::Client.call_tool(server, mcp_tool.external_tool_name, clean_args)
     end
 
     def record_audit_event!(event_type:, actor_type:, actor_id:, approval: nil, metadata: {}, security_critical: true)

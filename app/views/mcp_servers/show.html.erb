@@ -1,0 +1,270 @@
+<div class="space-y-8">
+  <!-- Top Navigation & Title Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-300 pb-5 gap-3">
+    <div>
+      <div class="flex items-center space-x-2">
+        <%= link_to "← MCP Servers", mcp_servers_path, class: "text-xs font-mono font-bold text-[#7c5cfc] hover:underline" %>
+        <span class="text-slate-300">/</span>
+        <span class="text-xs font-mono text-slate-500"><%= @server.server_identifier %></span>
+      </div>
+      <div class="flex items-center space-x-3 mt-1">
+        <h1 class="text-2xl font-black tracking-tight text-[#0d0726] font-sans"><%= @server.name %></h1>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase <%= @server.stdio? ? 'bg-purple-50 text-purple-800 border border-purple-200' : 'bg-blue-50 text-blue-800 border border-blue-200' %>">
+          <%= @server.transport_type.humanize %>
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions Toolbar -->
+    <div class="flex flex-wrap items-center gap-2">
+      <% if @server.connected? %>
+        <%= button_to disconnect_mcp_server_path(@server), method: :post, class: "h-9 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono font-bold transition flex items-center space-x-1.5 cursor-pointer" do %>
+          <span>Disconnect</span>
+        <% end %>
+      <% else %>
+        <%= button_to connect_mcp_server_path(@server), method: :post, class: "h-9 px-3.5 rounded-xl bg-[#0d0726] hover:bg-black text-[#d4f90d] text-xs font-mono font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs" do %>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Test & Connect</span>
+        <% end %>
+      <% end %>
+
+      <%= button_to discover_tools_mcp_server_path(@server), method: :post, class: "h-9 px-3.5 rounded-xl bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-xs font-mono font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs" do %>
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span>Discover Tools</span>
+      <% end %>
+
+      <%= link_to edit_mcp_server_path(@server), class: "h-9 px-3 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-mono font-bold transition flex items-center space-x-1" do %>
+        <span>Edit</span>
+      <% end %>
+
+      <%= button_to toggle_enabled_mcp_server_path(@server), method: :patch, class: "h-9 px-3 rounded-xl border #{@server.enabled? ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-emerald-300 bg-emerald-50 text-emerald-800'} text-xs font-mono font-bold transition cursor-pointer" do %>
+        <span><%= @server.enabled? ? 'Disable Server' : 'Enable Server' %></span>
+      <% end %>
+
+      <%= button_to mcp_server_path(@server), method: :delete, data: { turbo_confirm: "Are you sure you want to remove '#{@server.name}' and all its discovered tools?" }, class: "h-9 px-3 rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-mono font-bold transition cursor-pointer" do %>
+        <span>Remove</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Status & Server Metadata Header -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-2xl border border-slate-300 p-4 shadow-2xs space-y-1">
+      <div class="text-[10px] font-mono uppercase text-slate-500 font-bold">Connection State</div>
+      <div>
+        <% case @server.status %>
+        <% when "connected" %>
+          <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>CONNECTED</span>
+          </span>
+        <% when "connecting" %>
+          <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-800 border border-blue-300">
+            <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span>CONNECTING</span>
+          </span>
+        <% when "failed" %>
+          <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-50 text-rose-800 border border-rose-300">
+            <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+            <span>FAILED</span>
+          </span>
+        <% else %>
+          <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-300">
+            <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+            <span><%= @server.status.upcase %></span>
+          </span>
+        <% end %>
+      </div>
+      <% if @server.last_connected_at.present? %>
+        <div class="text-[10px] font-mono text-slate-400 pt-1">Last: <%= @server.last_connected_at.strftime("%H:%M:%S, %b %d") %></div>
+      <% end %>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-300 p-4 shadow-2xs space-y-1">
+      <div class="text-[10px] font-mono uppercase text-slate-500 font-bold">Protocol & Handshake</div>
+      <div class="text-sm font-bold font-mono text-slate-900">
+        <%= @server.protocol_version.presence || "2024-11-05" %>
+      </div>
+      <div class="text-[10px] font-mono text-slate-400">Config: v<%= @server.configuration_version %></div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-300 p-4 shadow-2xs space-y-1">
+      <div class="text-[10px] font-mono uppercase text-slate-500 font-bold">Discovered Tools</div>
+      <div class="text-sm font-bold font-mono text-slate-900">
+        <%= @tools.count %> total
+      </div>
+      <div class="text-[10px] font-mono text-emerald-700 font-bold">
+        <%= @tools.where(enabled: true).count %> active in Tool Registry
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-300 p-4 shadow-2xs space-y-1">
+      <div class="text-[10px] font-mono uppercase text-slate-500 font-bold">Governance Status</div>
+      <div class="text-xs font-bold font-mono <%= @server.enabled? ? 'text-emerald-700' : 'text-slate-500' %>">
+        <%= @server.enabled? ? 'ACTIVE IN AGENT RUNTIME' : 'DISABLED BY ADMIN' %>
+      </div>
+      <div class="text-[10px] font-mono text-slate-400">Timeouts: <%= @server.connection_timeout %>s / <%= @server.request_timeout %>s</div>
+    </div>
+  </div>
+
+  <% if @server.error_message.present? %>
+    <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs font-mono text-rose-900 space-y-1">
+      <div class="font-bold flex items-center space-x-1.5">
+        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <span>Last Connection Error:</span>
+      </div>
+      <p class="font-normal pl-5"><%= @server.error_message %></p>
+    </div>
+  <% end %>
+
+  <!-- SECTION: Discovered Tools & Permission Management -->
+  <div class="bg-white rounded-2xl border border-slate-300 p-6 space-y-5 shadow-2xs">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dashed border-slate-200 pb-3 gap-2">
+      <div>
+        <h2 class="text-base font-black uppercase tracking-tight text-[#0d0726] font-sans">
+          Discovered Tools & Ruby Governance Matrix
+        </h2>
+        <p class="text-xs text-slate-600 font-medium">
+          Newly discovered tools default to <strong class="text-rose-700">DENY</strong> and disabled until explicitly authorized.
+        </p>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <span class="text-xs font-mono text-slate-500">
+          <%= @tools.count %> tools discovered
+        </span>
+      </div>
+    </div>
+
+    <% if @tools.any? %>
+      <div class="space-y-4">
+        <% @tools.each do |tool| %>
+          <div class="rounded-xl border <%= tool.enabled? ? 'border-slate-300 bg-[#faf9f5]' : 'border-slate-200 bg-slate-50/50' %> p-4 space-y-3 transition">
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
+              <!-- Tool Identity & Key -->
+              <div class="space-y-1">
+                <div class="flex items-center space-x-2.5">
+                  <span class="text-sm font-bold font-mono text-[#0d0726]">
+                    <%= tool.external_tool_name %>
+                  </span>
+                  <span class="text-xs font-mono text-slate-500">
+                    (<%= tool.namespaced_tool_key %>)
+                  </span>
+
+                  <!-- Status badge -->
+                  <% if tool.enabled? %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#ccff00]/20 text-emerald-950 border border-[#ccff00]">
+                      ENABLED
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-200 text-slate-700">
+                      DISABLED
+                    </span>
+                  <% end %>
+                </div>
+
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  <%= tool.description.presence || "No description provided by MCP server." %>
+                </p>
+              </div>
+
+              <!-- Action Controls: Enable Toggle & Policy Config Form -->
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <!-- Policy Decision Selector -->
+                <%= form_with model: [@server, tool], method: :patch, local: true, class: "flex items-center space-x-1.5" do |f| %>
+                  <%= f.select :policy_decision,
+                        options_for_select([["Allow (No gate)", "allow"], ["Require Human Approval", "require_approval"], ["Deny (Block)", "deny"]], tool.policy_decision),
+                        {},
+                        onchange: "this.form.submit();",
+                        class: "rounded-lg border border-slate-300 text-xs font-mono py-1 px-2 text-slate-800 bg-white cursor-pointer" %>
+
+                  <%= f.select :risk_classification,
+                        options_for_select([["Low Risk", "low"], ["Medium Risk", "medium"], ["High Risk", "high"], ["Critical Risk", "critical"]], tool.risk_classification),
+                        {},
+                        onchange: "this.form.submit();",
+                        class: "rounded-lg border border-slate-300 text-xs font-mono py-1 px-2 text-slate-800 bg-white cursor-pointer" %>
+                <% end %>
+
+                <!-- Enable / Disable Switch -->
+                <%= button_to toggle_mcp_server_mcp_tool_path(@server, tool), method: :patch, class: "px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition cursor-pointer #{tool.enabled? ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300' : 'bg-[#0d0726] hover:bg-black text-[#d4f90d]'}" do %>
+                  <span><%= tool.enabled? ? 'Disable Tool' : 'Authorize & Enable' %></span>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Footer: Schema Hash & Invocation Stats -->
+            <div class="pt-2 border-t border-dashed border-slate-200 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-500 gap-2">
+              <div class="flex items-center space-x-3">
+                <span title="SHA-256 of Canonical JSON Schema">
+                  Hash: <strong class="text-slate-700"><%= tool.schema_hash.first(12) %>...</strong>
+                </span>
+                <span>·</span>
+                <span>Invocations: <strong class="text-slate-900"><%= tool.invocation_count %></strong></span>
+                <% if tool.last_invoked_at.present? %>
+                  <span>·</span>
+                  <span>Last: <%= tool.last_invoked_at.strftime("%H:%M, %b %d") %></span>
+                <% end %>
+              </div>
+
+              <!-- Input Schema Drawer Toggle -->
+              <details class="text-[11px] font-mono cursor-pointer">
+                <summary class="text-[#7c5cfc] hover:underline font-bold">View JSON Schema</summary>
+                <div class="mt-2 p-3 rounded-lg bg-slate-900 text-slate-200 text-xs font-mono overflow-x-auto">
+                  <pre><%= JSON.pretty_generate(tool.input_schema) rescue tool.input_schema.to_s %></pre>
+                </div>
+              </details>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-8 border border-dashed border-slate-300 rounded-xl bg-[#faf9f5] space-y-2">
+        <p class="text-xs font-medium text-slate-600">
+          Zero tools currently discovered from this server.
+        </p>
+        <p class="text-[11px] font-mono text-slate-400">
+          Click "Discover Tools" in the toolbar above to initiate tool discovery.
+        </p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- SECTION: Audit Events for this Server -->
+  <div class="bg-white rounded-2xl border border-slate-300 p-6 space-y-4 shadow-2xs">
+    <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-3">
+      <h2 class="text-sm font-black uppercase tracking-tight text-[#0d0726] font-sans">
+        Server Audit Trail & Connection Lifecycle
+      </h2>
+      <span class="text-xs font-mono text-slate-400">Cryptographically bound events</span>
+    </div>
+
+    <% if @audit_events.any? %>
+      <div class="space-y-2">
+        <% @audit_events.each do |event| %>
+          <div class="p-3 rounded-xl border border-slate-200 bg-[#faf9f5] flex items-center justify-between text-xs font-mono">
+            <div class="flex items-center space-x-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 text-slate-800">
+                <%= event.event_type %>
+              </span>
+              <span class="text-slate-600 font-medium">
+                actor: <%= event.actor_id || event.actor_type %>
+              </span>
+            </div>
+            <div class="flex items-center space-x-3 text-slate-400 text-[11px]">
+              <span><%= event.occurred_at.strftime("%H:%M:%S, %b %d") %></span>
+              <span title="Cryptographic Event Hash"><%= event.event_hash.to_s.first(8) %>...</span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-xs font-mono text-slate-500 text-center py-4">No audit events recorded for this server yet.</p>
+    <% end %>
+  </div>
+</div>

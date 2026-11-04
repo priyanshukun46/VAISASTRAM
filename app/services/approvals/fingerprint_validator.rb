@@ -45,9 +45,11 @@ module Approvals
             "Action mismatch: step action '#{step.action_key}' does not match approval tool '#{tool_name}'"
         end
 
-        # Compare canonicalized arguments
-        canonical_step_args = Policies::Fingerprint.canonicalize_arguments(step.arguments)
-        canonical_appr_args = Policies::Fingerprint.canonicalize_arguments(arguments)
+        # Compare canonicalized arguments (ignoring internal metadata keys like _mcp_* added during approval binding)
+        clean_step_args = (step.arguments || {}).reject { |k, _| k.to_s.start_with?("_") }
+        clean_appr_args = (arguments || {}).reject { |k, _| k.to_s.start_with?("_") }
+        canonical_step_args = Policies::Fingerprint.canonicalize_arguments(clean_step_args)
+        canonical_appr_args = Policies::Fingerprint.canonicalize_arguments(clean_appr_args)
 
         if canonical_step_args != canonical_appr_args
           raise Approvals::FingerprintMismatchError,
@@ -73,6 +75,31 @@ module Approvals
       unless ActiveSupport::SecurityUtils.secure_compare(recalculated_fingerprint, stored_fingerprint)
         raise Approvals::FingerprintMismatchError,
           "Action fingerprint mismatch: arguments or execution context have been modified since approval was requested."
+      end
+
+      # 5. MCP-specific configuration & schema integrity check
+      if tool_name.to_s.start_with?("mcp.")
+        mcp_tool = McpTool.find_by(namespaced_tool_key: tool_name)
+        if mcp_tool.nil? || mcp_tool.mcp_server.nil?
+          @approval.update_columns(status: "invalidated") if @approval.persisted?
+          raise Approvals::FingerprintMismatchError,
+            "MCP tool '#{tool_name}' or its server no longer exists. Approval has been invalidated."
+        end
+
+        bound_config_ver = arguments["_mcp_config_version"]
+        bound_schema_hash = arguments["_mcp_schema_hash"]
+
+        if bound_config_ver.present? && bound_config_ver.to_s != mcp_tool.mcp_server.configuration_version.to_s
+          @approval.update_columns(status: "invalidated") if @approval.persisted?
+          raise Approvals::FingerprintMismatchError,
+            "MCP server configuration has changed since approval was requested (version #{bound_config_ver} -> #{mcp_tool.mcp_server.configuration_version}). Approval has been invalidated."
+        end
+
+        if bound_schema_hash.present? && bound_schema_hash.to_s != mcp_tool.schema_hash.to_s
+          @approval.update_columns(status: "invalidated") if @approval.persisted?
+          raise Approvals::FingerprintMismatchError,
+            "MCP tool schema has changed since approval was requested. Approval has been invalidated."
+        end
       end
 
       true

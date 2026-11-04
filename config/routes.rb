@@ -55,4 +55,19 @@ Rails.application.routes.draw do
   # Evaluation Center Routes
   get "evaluations", to: "evaluations#index", as: :evaluations
   post "evaluations/run", to: "evaluations#run", as: :run_evaluations
+
+  # MCP Server Management & Marketplace Routes
+  resources :mcp_servers do
+    member do
+      post :connect
+      post :disconnect
+      post :discover_tools
+      patch :toggle_enabled
+    end
+    resources :mcp_tools, only: [:update] do
+      member do
+        patch :toggle
+      end
+    end
+  end
 end

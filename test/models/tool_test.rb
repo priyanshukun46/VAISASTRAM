@@ -28,13 +28,16 @@ class ToolTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:key], "has already been taken"
   end
 
-  test "validates key format allows only lowercase letters, numbers, and underscores" do
+  test "validates key format allows only lowercase letters, numbers, underscores, and dots" do
     invalid_format = Tool.new(key: "Bad Key!", name: "Invalid Tool", risk_level: "low")
     assert_not invalid_format.valid?
-    assert_includes invalid_format.errors[:key], "must contain only lowercase letters, numbers, and underscores"
+    assert_includes invalid_format.errors[:key], "must contain only lowercase letters, numbers, underscores, and dots"
 
     valid_format = Tool.new(key: "valid_action_123", name: "Valid Tool", risk_level: "low", enabled: true)
     assert valid_format.valid?
+
+    namespaced_mcp_format = Tool.new(key: "mcp.wordcraft.inspect_document", name: "MCP Tool", risk_level: "low", enabled: true)
+    assert namespaced_mcp_format.valid?
   end
 
   test "scopes: enabled and by_risk" do

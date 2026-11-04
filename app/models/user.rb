@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :executions, through: :tasks
   has_many :policies, dependent: :nullify
   has_many :audit_events, dependent: :nullify
+  has_many :mcp_servers, dependent: :destroy
   has_many :reviewed_approvals, class_name: "Approval", foreign_key: :reviewer_id, dependent: :nullify
 
   validates :name, presence: true

@@ -13,11 +13,22 @@ module Approvals
     end
 
     def create_request(user:, task:, execution: nil, agent_step: nil, action_key:, arguments: {}, decision: nil, expires_in: Approvals::ExpirationService.default_expiration_period)
-      fingerprint = decision&.action_fingerprint.presence || Policies::Fingerprint.generate(
+      # Bind MCP server identity, configuration version, and schema hash if an MCP tool
+      effective_args = (arguments || {}).deep_dup
+      if action_key.to_s.start_with?("mcp.")
+        mcp_tool = McpTool.find_by(namespaced_tool_key: action_key)
+        if mcp_tool.present? && mcp_tool.mcp_server.present?
+          effective_args["_mcp_server_id"] = mcp_tool.mcp_server.id.to_s
+          effective_args["_mcp_config_version"] = mcp_tool.mcp_server.configuration_version.to_s
+          effective_args["_mcp_schema_hash"] = mcp_tool.schema_hash.to_s
+        end
+      end
+
+      fingerprint = Policies::Fingerprint.generate(
         user: user,
         task: task,
         action_key: action_key,
-        arguments: arguments
+        arguments: effective_args
       )
 
       # Check for existing active pending request for the identical action
@@ -37,7 +48,7 @@ module Approvals
         execution: execution || agent_step&.execution,
         agent_step: agent_step,
         tool_name: action_key.to_s.strip.downcase,
-        action_arguments: arguments || {},
+        action_arguments: effective_args,
         action_fingerprint: fingerprint,
         action_digest: fingerprint,
         policy_decision_reference: decision&.policy_id || "policy_engine",
@@ -59,6 +70,20 @@ module Approvals
           expires_at: approval.expires_at.iso8601
         }
       )
+
+      if action_key.to_s.start_with?("mcp.")
+        record_audit!(
+          event_type: "mcp_tool_approval_requested",
+          approval: approval,
+          actor_type: "policy_engine",
+          actor_id: decision&.policy_id || "policy_engine",
+          metadata: {
+            tool_name: approval.tool_name,
+            action_fingerprint: fingerprint,
+            reason: decision&.reason
+          }
+        )
+      end
 
       approval
     end

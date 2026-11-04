@@ -56,6 +56,7 @@ module Policies
         Rules::SensitiveOperationRule.new, # Priority 1: Hard block destructive actions
         Rules::UserPermissionRule.new,     # Priority 5: User authentication & roles
         Rules::ToolPermissionRule.new,     # Priority 10: Tool registration & allowlist
+        Rules::McpToolPolicyRule.new,      # Priority 15: MCP Server & Tool Governance
         Rules::PaymentLimitRule.new,       # Priority 25: Currency-safe spending ceilings
         Rules::DatabasePolicyRule.new      # Priority 50: Configured DB policies
       ]

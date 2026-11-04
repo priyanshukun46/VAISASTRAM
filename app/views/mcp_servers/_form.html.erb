@@ -1,0 +1,171 @@
+<%= form_with model: server, local: true, class: "space-y-6" do |f| %>
+  <% if server.errors.any? %>
+    <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs font-mono text-rose-900 space-y-1">
+      <div class="font-bold flex items-center space-x-1.5">
+        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <span>Configuration errors prevented saving:</span>
+      </div>
+      <ul class="list-disc pl-5 space-y-0.5">
+        <% server.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- General Information -->
+  <div class="bg-white rounded-2xl border border-slate-300 p-6 space-y-4 shadow-2xs">
+    <h3 class="text-sm font-black uppercase tracking-tight text-[#0d0726] border-b border-slate-100 pb-2">
+      1. Server Identification
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <%= f.label :name, "Server Name", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+        <%= f.text_field :name, placeholder: "e.g. WordCraft Document Engine", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+      </div>
+
+      <div>
+        <%= f.label :server_identifier, "Namespaced Slug Identifier", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+        <%= f.text_field :server_identifier, placeholder: "e.g. wordcraft (used in mcp.<id>.<tool>)", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+        <span class="text-[10px] font-mono text-slate-400">Lowercase letters, numbers, hyphens and underscores.</span>
+      </div>
+    </div>
+
+    <div>
+      <%= f.label :description, "Description & Purpose", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+      <%= f.text_area :description, rows: 2, placeholder: "Describe the capabilities and domain of this server...", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+    </div>
+  </div>
+
+  <!-- Transport Configuration -->
+  <div class="bg-white rounded-2xl border border-slate-300 p-6 space-y-4 shadow-2xs" data-controller="mcp-transport">
+    <h3 class="text-sm font-black uppercase tracking-tight text-[#0d0726] border-b border-slate-100 pb-2">
+      2. Transport Protocol
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="flex items-start p-3.5 border border-slate-200 rounded-xl hover:border-[#7c5cfc] cursor-pointer space-x-3 transition">
+        <%= f.radio_button :transport_type, "stdio", class: "mt-1 text-[#7c5cfc] focus:ring-[#7c5cfc]" %>
+        <div>
+          <span class="block text-xs font-bold text-[#0d0726] uppercase font-mono">Local STDIO Subprocess</span>
+          <span class="block text-[11px] text-slate-500 mt-0.5">Executes local child processes via pipe I/O. Restricted to permitted executable allowlist.</span>
+        </div>
+      </label>
+
+      <label class="flex items-start p-3.5 border border-slate-200 rounded-xl hover:border-[#7c5cfc] cursor-pointer space-x-3 transition">
+        <%= f.radio_button :transport_type, "streamable_http", class: "mt-1 text-[#7c5cfc] focus:ring-[#7c5cfc]" %>
+        <div>
+          <span class="block text-xs font-bold text-[#0d0726] uppercase font-mono">Streamable HTTP (Remote)</span>
+          <span class="block text-[11px] text-slate-500 mt-0.5">Connects to remote endpoints over HTTPS with Server-Sent Events stream support and SSRF protection.</span>
+        </div>
+      </label>
+    </div>
+
+    <!-- STDIO Fields -->
+    <div class="space-y-4 pt-2 border-t border-slate-100">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <%= f.label :command, "Executable Command (STDIO)", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+          <%= f.text_field :command, placeholder: "e.g. npx, python3, wordcraft", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+          <span class="text-[10px] font-mono text-slate-400">Must be in permitted allowlist.</span>
+        </div>
+
+        <div class="md:col-span-2">
+          <%= f.label :arguments_string, "Process Arguments (Space or Line Separated)", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+          <%= f.text_field :arguments_string, value: server.arguments.is_a?(Array) ? server.arguments.join(" ") : server.arguments, placeholder: "e.g. -y wordcraft mcp", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+          <span class="text-[10px] font-mono text-slate-400">Stored safely as an Array; never shell interpolated.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTTP Fields -->
+    <div class="space-y-4 pt-2 border-t border-slate-100">
+      <div>
+        <%= f.label :endpoint_url, "Remote Endpoint URL (Streamable HTTP)", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+        <%= f.text_field :endpoint_url, placeholder: "https://api.example.com/v1/mcp", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+        <span class="text-[10px] font-mono text-slate-400">HTTPS required for remote servers. Validated against SSRF targets.</span>
+      </div>
+
+      <% if current_user&.admin? %>
+        <div class="flex items-center space-x-2 pt-1">
+          <%= f.check_box :allow_local_connections, class: "rounded border-slate-300 text-[#7c5cfc] focus:ring-[#7c5cfc]" %>
+          <%= f.label :allow_local_connections, "Administrator Bypass: Permit local / private IP connection targets (e.g. 127.0.0.1)", class: "text-xs font-mono text-amber-900 font-semibold" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Credentials & Environment (Encrypted at rest) -->
+  <div class="bg-white rounded-2xl border border-slate-300 p-6 space-y-4 shadow-2xs">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+      <h3 class="text-sm font-black uppercase tracking-tight text-[#0d0726]">
+        3. Encrypted Credentials & Environment
+      </h3>
+      <span class="inline-flex items-center space-x-1 text-[10px] font-mono bg-purple-50 text-purple-900 border border-purple-200 px-2 py-0.5 rounded">
+        <span>Active Record Encryption</span>
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <%= f.label :environment_variables, "Environment Variables (JSON or KEY=VAL)", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+        <%= f.text_area :environment_variables, rows: 4, placeholder: "API_KEY=secret_val\nENV_MODE=production", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+        <span class="text-[10px] font-mono text-slate-400">Encrypted at rest with Rails Active Record Encryption.</span>
+      </div>
+
+      <div>
+        <%= f.label :authentication_configuration, "Authentication Configuration (Token or JSON Headers)", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+        <%= f.text_area :authentication_configuration, rows: 4, placeholder: "{\"bearer_token\": \"sk-token\"}", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]" %>
+        <span class="text-[10px] font-mono text-slate-400">Passed automatically in Authorization headers during HTTP calls.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Governance & Timeouts -->
+  <div class="bg-white rounded-2xl border border-slate-300 p-6 space-y-4 shadow-2xs">
+    <h3 class="text-sm font-black uppercase tracking-tight text-[#0d0726] border-b border-slate-100 pb-2">
+      4. Governance Limits & Lifecycle
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div>
+        <%= f.label :connection_timeout, "Connect Timeout (s)", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+        <%= f.number_field :connection_timeout, min: 1, max: 120, class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono text-slate-900" %>
+      </div>
+
+      <div>
+        <%= f.label :request_timeout, "Request Timeout (s)", class: "block text-xs font-mono font-bold text-slate-700 uppercase mb-1" %>
+        <%= f.number_field :request_timeout, min: 1, max: 300, class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono text-slate-900" %>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-6">
+        <%= f.check_box :enabled, class: "rounded border-slate-300 text-[#7c5cfc] focus:ring-[#7c5cfc]" %>
+        <%= f.label :enabled, "Enabled in Governance Engine", class: "text-xs font-mono font-bold text-slate-800" %>
+      </div>
+
+      <% if server.new_record? %>
+        <div class="flex items-center space-x-2 pt-6">
+          <%= check_box_tag :auto_connect, "1", true, class: "rounded border-slate-300 text-[#7c5cfc] focus:ring-[#7c5cfc]" %>
+          <%= label_tag :auto_connect, "Test handshake immediately", class: "text-xs font-mono font-bold text-slate-800" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Form Submission Buttons -->
+  <div class="flex items-center justify-between pt-4">
+    <%= link_to "Cancel", mcp_servers_path, class: "text-xs font-mono font-bold text-slate-600 hover:text-black transition" %>
+
+    <div class="flex items-center space-x-3">
+      <%= f.button type: :submit, class: "px-5 py-2.5 rounded-xl bg-[#0d0726] hover:bg-black text-[#d4f90d] text-xs font-mono font-bold uppercase tracking-wider transition shadow-sm hover:scale-102 active:scale-98 cursor-pointer flex items-center space-x-2" do %>
+        <span>Save MCP Server</span>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+      <% end %>
+    </div>
+  </div>
+<% end %>

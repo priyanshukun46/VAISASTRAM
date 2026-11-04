@@ -1,0 +1,15 @@
+<div class="max-w-4xl mx-auto space-y-8">
+  <div class="flex items-center justify-between border-b border-dashed border-slate-300 pb-4">
+    <div>
+      <div class="flex items-center space-x-2">
+        <%= link_to "← MCP Servers", mcp_servers_path, class: "text-xs font-mono font-bold text-[#7c5cfc] hover:underline" %>
+      </div>
+      <h1 class="text-2xl font-black tracking-tight text-[#0d0726] font-sans mt-1">Register New MCP Server</h1>
+      <p class="text-xs text-slate-600 mt-0.5 font-medium">
+        Configure connection parameters, transport credentials, and governance bounds for local or remote Model Context Protocol servers.
+      </p>
+    </div>
+  </div>
+
+  <%= render "form", server: @server %>
+</div>
