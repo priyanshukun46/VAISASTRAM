@@ -53,21 +53,31 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # Production Action Mailer configuration
+  app_host = ENV.fetch("APP_HOST", "vaisastram.up.railway.app")
+  config.action_mailer.default_url_options = {
+    host: app_host,
+    protocol: ENV.fetch("APP_PROTOCOL", "https")
+  }
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries = true
 
-  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
-  # config.action_mailer.smtp_settings = {
-  #   user_name: Rails.application.credentials.dig(:smtp, :user_name),
-  #   password: Rails.application.credentials.dig(:smtp, :password),
-  #   address: "smtp.example.com",
-  #   port: 587,
-  #   authentication: :plain
-  # }
+  # Authenticated SMTP with TLS configured via environment variables
+  smtp_port = ENV.fetch("SMTP_PORT", 587).to_i
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address:              ENV.fetch("SMTP_ADDRESS", "smtp.sendgrid.net"),
+    port:                 smtp_port,
+    domain:               ENV.fetch("SMTP_DOMAIN", app_host),
+    user_name:            ENV["SMTP_USERNAME"],
+    password:             ENV["SMTP_PASSWORD"],
+    authentication:       ENV.fetch("SMTP_AUTH_TYPE", "plain").to_sym,
+    enable_starttls_auto: true,
+    tls:                  smtp_port == 465,
+    open_timeout:         15,
+    read_timeout:         30
+  }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

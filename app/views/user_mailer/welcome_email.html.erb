@@ -1,0 +1,30 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 0;">Welcome to VAISASTRAM, <%= @user.name %>!</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  Your operator account has been created successfully. You now have access to the VAISASTRAM governed autonomous AI agent workspace.
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Account Email:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @user.email %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Assigned Role:</td>
+      <td style="padding: 6px 0;"><span style="background-color: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; font-size: 11px;"><%= @user.role %></span></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Policy Guard:</td>
+      <td style="padding: 6px 0; color: #16a34a; font-weight: 600;">ACTIVE (Fail-closed Ruby enforcement)</td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "Launch Agent Workspace", workspace_url, class: "button btn-accent" %>
+</p>
+
+<div class="security-notice">
+  <strong>Governance Note:</strong> In VAISASTRAM, AI models propose actions but strict Ruby policy rules independently govern tool executions. High-risk actions require human-in-the-loop review.
+</div>

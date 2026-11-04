@@ -1,0 +1,16 @@
+[Approved] Action Cleared — VAISASTRAM
+
+An action on your task has been reviewed and approved by an authorized reviewer.
+
+Details:
+- Task: Task #<%= @task&.id %> (<%= @task&.title %>)
+- Tool / Action: <%= @tool_name %>
+- Reviewer: <%= @reviewer&.name || "Authorized Reviewer" %> (<%= @reviewer&.role || "admin" %>)
+- Decided At: <%= @reviewed_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+
+View Timeline:
+<%= timeline_execution_url(@execution) %>
+
+Audit Trail:
+The human approval decision was verified with cryptographic action fingerprint
+binding and recorded into the immutable audit chain.

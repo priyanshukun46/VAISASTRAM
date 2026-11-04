@@ -1,0 +1,10 @@
+Verify your VAISASTRAM Email Address
+
+Hello <%= @user.name %>,
+
+Please confirm that this email address belongs to your VAISASTRAM account by visiting the verification link below:
+
+<%= verify_email_url(token: @token) %>
+
+Security Notice:
+This verification token is valid for 24 hours. If you did not request this verification, please contact your security auditor immediately.

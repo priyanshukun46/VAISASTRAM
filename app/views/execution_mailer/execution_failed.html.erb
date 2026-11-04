@@ -1,0 +1,34 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 0;">Task Execution Failed</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  An execution error occurred while processing Task #<%= @task.id %>. Execution was halted safely in accordance with fail-closed security policies.
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Task Title:</td>
+      <td style="padding: 6px 0; font-weight: bold;"><%= @task.title %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Error Category:</td>
+      <td style="padding: 6px 0;"><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;"><%= @error_category %></span></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Summary:</td>
+      <td style="padding: 6px 0; color: #475569;"><%= @sanitized_summary %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Halted At:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @failed_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %></td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "Inspect Failure Details in Audit Stream", audit_execution_url(@execution), class: "button btn-accent" %>
+</p>
+
+<div class="security-notice">
+  <strong>Security Redaction:</strong> Internal stack traces, API keys, and server environment variables have been redacted from this email. Detailed forensic logs are available to authorized operators in the secure Audit Center.
+</div>

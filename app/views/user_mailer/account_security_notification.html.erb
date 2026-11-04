@@ -1,0 +1,36 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 0;">Account Security Notification</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  Hello <%= @user.name %>, we detected important security-relevant activity on your VAISASTRAM account.
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Account Email:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @user.email %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Event Type:</td>
+      <td style="padding: 6px 0; font-weight: 700; color: #0f172a;"><%= @details["event"] || @details[:event] || "Security configuration changed" %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Timestamp:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= Time.current.utc.iso8601 %></td>
+    </tr>
+    <% if @details["ip_address"].present? || @details[:ip_address].present? %>
+      <tr>
+        <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Source IP:</td>
+        <td style="padding: 6px 0; font-family: monospace;"><%= @details["ip_address"] || @details[:ip_address] %></td>
+      </tr>
+    <% end %>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "Review Account Security in Audit Center", audit_url, class: "button btn-accent" %>
+</p>
+
+<div class="security-notice">
+  <strong>Urgent Action:</strong> If this activity was not initiated by you, please sign in and change your password immediately, or notify your security compliance officer.
+</div>

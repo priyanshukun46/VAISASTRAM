@@ -74,6 +74,7 @@
                 <%= nav_link_to "MCP Servers", mcp_servers_path %>
                 <%= nav_link_to "Audit Center", audit_path %>
                 <%= nav_link_to "Evaluation Center", evaluations_path %>
+                <%= nav_link_to "Notifications", notification_preferences_path %>
               </nav>
             <% end %>
 
@@ -87,11 +88,11 @@
                 <div class="h-8 w-8 rounded-full bg-[#0d0726] text-[#d4f90d] flex items-center justify-center text-xs font-mono font-bold uppercase shadow-xs">
                   <%= current_user.name.first(2) %>
                 </div>
-                <%= button_to destroy_user_session_path, method: :delete, class: "text-xs font-semibold px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 transition cursor-pointer shadow-2xs" do %>
+                <%= button_to destroy_user_session_path, method: :delete, class: "text-xs font-bold px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white border border-red-700 transition cursor-pointer shadow-xs active:scale-98" do %>
                   Sign out
                 <% end %>
               <% else %>
-                <%= link_to "Login", new_user_session_path, class: "text-xs font-bold px-3 py-1.5 text-slate-800 hover:text-black transition" %>
+                <%= link_to "Login", new_user_session_path, class: "text-xs font-bold px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white border border-red-700 transition cursor-pointer shadow-xs active:scale-98" %>
                 <%= link_to "Sign up", new_user_registration_path, class: "text-xs font-bold px-4 py-2 rounded-lg bg-[#0d0726] hover:bg-black text-white transition shadow-sm" %>
               <% end %>
             </div>

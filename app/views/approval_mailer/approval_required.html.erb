@@ -1,0 +1,41 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #d97706; margin-top: 0;">Human Approval Required</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  An autonomous agent action requires human review and authorization before tool execution can proceed.
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Approval Request:</td>
+      <td style="padding: 6px 0; font-family: monospace; font-weight: bold;">Approval #<%= @approval.id %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Associated Task:</td>
+      <td style="padding: 6px 0;">Task #<%= @task&.id %> — <%= @task&.title %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Tool / Action:</td>
+      <td style="padding: 6px 0;"><code style="background-color: #0d0726; color: #d4f90d; padding: 2px 6px; border-radius: 4px; font-size: 12px;"><%= @tool_name %></code></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Expires At:</td>
+      <td style="padding: 6px 0; font-family: monospace; color: #dc2626;"><%= @expires_at ? @expires_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") : "24 hours from request" %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Action Arguments:</td>
+      <td style="padding: 6px 0;">
+        <pre style="background: #e2e8f0; padding: 8px; border-radius: 4px; font-size: 11px; margin: 4px 0; white-space: pre-wrap;"><%= JSON.pretty_generate(@arguments_summary) %></pre>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "Review Approval in VAISASTRAM", approval_url(@approval), class: "button btn-accent" %>
+</p>
+
+<div class="security-notice">
+  <strong>MANDATORY GOVERNANCE CONSTRAINT:</strong>
+  This email DOES NOT approve or execute this action. To prevent unauthorized execution or email tampering, you must log in to VAISASTRAM, authenticate with your operator credentials, and independently review and authorize or reject the request.
+</div>

@@ -1,0 +1,12 @@
+Task Execution Completed — VAISASTRAM
+
+Task #<%= @task.id %> has finished running with all policy and tool constraints verified.
+
+Details:
+- Task: Task #<%= @task.id %> (<%= @task.title %>)
+- Completed At: <%= @completed_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+- Steps Executed: <%= @steps_count %> step(s)
+- Audit Chain: Sealed and cryptographically linked
+
+Review Timeline & Audit:
+<%= timeline_execution_url(@execution) %>

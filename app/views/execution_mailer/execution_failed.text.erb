@@ -1,0 +1,17 @@
+[Alert] Task Execution Failed — VAISASTRAM
+
+An execution error occurred while processing Task #<%= @task.id %>.
+Execution was halted safely in accordance with fail-closed security policies.
+
+Details:
+- Task: Task #<%= @task.id %> (<%= @task.title %>)
+- Error Category: <%= @error_category %>
+- Status Summary: <%= @sanitized_summary %>
+- Halted At: <%= @failed_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+
+Inspect Audit Details:
+<%= audit_execution_url(@execution) %>
+
+Security Redaction:
+Internal stack traces, credentials, and sensitive execution parameters are
+redacted from this message. Access the secure Audit Center for authorized forensics.

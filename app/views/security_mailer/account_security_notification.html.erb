@@ -1,0 +1,26 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 0;">Account Security Notice</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  Important security activity has occurred on your account.
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Account:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @user.email %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Notice:</td>
+      <td style="padding: 6px 0;"><%= @details["event"] || @details[:event] || "Security settings modified" %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Timestamp:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @occurred_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %></td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "Review Audit Center", audit_url, class: "button btn-accent" %>
+</p>

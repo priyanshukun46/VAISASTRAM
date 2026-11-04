@@ -2,12 +2,150 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <style>
-      /* Email styles need to be inline */
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+      body {
+        margin: 0;
+        padding: 0;
+        min-width: 100%;
+        background-color: #f4f3ef;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #0f172a;
+        line-height: 1.5;
+      }
+      table {
+        border-spacing: 0;
+        font-family: inherit;
+      }
+      td {
+        padding: 0;
+      }
+      img {
+        border: 0;
+      }
+      .wrapper {
+        width: 100%;
+        table-layout: fixed;
+        background-color: #f4f3ef;
+        padding: 32px 16px;
+      }
+      .main-table {
+        background-color: #ffffff;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 600px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      }
+      .header {
+        background-color: #0d0726;
+        padding: 24px 32px;
+        border-bottom: 2px solid #d4f90d;
+      }
+      .brand-title {
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        margin: 0;
+      }
+      .brand-subtitle {
+        color: #94a3b8;
+        font-size: 11px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        margin-top: 4px;
+      }
+      .badge-version {
+        display: inline-block;
+        background-color: #d4f90d;
+        color: #0d0726;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 6px;
+      }
+      .content {
+        padding: 32px;
+      }
+      .footer {
+        background-color: #f8fafc;
+        padding: 20px 32px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 11px;
+        color: #64748b;
+        text-align: center;
+        line-height: 1.4;
+      }
+      .button {
+        display: inline-block;
+        background-color: #0d0726;
+        color: #ffffff !important;
+        text-decoration: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 14px;
+        margin: 16px 0;
+      }
+      .btn-accent {
+        background-color: #0d0726;
+        border-left: 4px solid #d4f90d;
+      }
+      .card-box {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+        margin: 16px 0;
+      }
+      .security-notice {
+        background-color: #fffbeb;
+        border: 1px solid #fef3c7;
+        border-left: 4px solid #f59e0b;
+        color: #92400e;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        margin-top: 20px;
+      }
+      .footer-links {
+        margin-top: 8px;
+        color: #64748b;
+      }
+      .footer-links a {
+        color: #475569;
+        text-decoration: underline;
+      }
     </style>
   </head>
-
   <body>
-    <%= yield %>
+    <div class="wrapper">
+      <table class="main-table" align="center" cellpadding="0" cellspacing="0">
+        <tr>
+          <td class="header">
+            <h1 class="brand-title">VAISASTRAM <span class="badge-version">2.0</span></h1>
+            <div class="brand-subtitle">AI proposes &bull; Ruby decides &bull; Independent Governance Engine</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="content">
+            <%= yield %>
+          </td>
+        </tr>
+        <tr>
+          <td class="footer">
+            <p style="margin: 0 0 6px 0;"><strong>VAISASTRAM Governance & Policy Enforcement Engine</strong></p>
+            <p style="margin: 0 0 8px 0;">All human decisions and policy evaluations are cryptographically hashed and committed to an immutable audit trail.</p>
+            <div class="footer-links">
+              This email was dispatched securely to <%= @recipient&.email || @user&.email %>.
+              Never forward approval or credential reset links.
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
   </body>
 </html>

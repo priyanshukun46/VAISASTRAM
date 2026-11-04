@@ -153,6 +153,7 @@ module Tools
 
       if @execution.present? && @execution.status != "running"
         @execution.update!(status: "running")
+        Notifications::Dispatcher.dispatch(:execution_started, execution: @execution)
       end
 
       # 4. Safe tool dispatch (Simulated)
@@ -174,6 +175,7 @@ module Tools
         remaining = @execution.agent_steps.where.not(id: @step&.id).where.not(status: %w[completed failed blocked])
         if remaining.none?
           @execution.update!(status: "completed", completed_at: Time.current)
+          Notifications::Dispatcher.dispatch(:execution_completed, execution: @execution)
         end
       end
 
@@ -208,6 +210,7 @@ module Tools
 
       if @execution.present?
         @execution.update!(status: "failed", error_message: e.message)
+        Notifications::Dispatcher.dispatch(:execution_failed, execution: @execution, error: e.message)
       end
 
       record_audit_event!(
@@ -261,6 +264,8 @@ module Tools
         actor_id: decision.policy_id,
         metadata: { action_key: @action_key, reason: decision.reason }
       )
+
+      Notifications::Dispatcher.dispatch(:policy_blocked, agent_step: @step, execution: @execution, decision: decision)
 
       ExecutionResult.new(
         status: "blocked",
@@ -317,6 +322,7 @@ module Tools
 
       if @execution.present? && @execution.status != "running"
         @execution.update!(status: "running")
+        Notifications::Dispatcher.dispatch(:execution_started, execution: @execution)
       end
 
       record_audit_event!(
@@ -364,6 +370,7 @@ module Tools
 
       if @execution.present?
         @execution.update!(status: "failed", error_message: err.message)
+        Notifications::Dispatcher.dispatch(:execution_failed, execution: @execution, error: err.message)
       end
 
       record_audit_event!(

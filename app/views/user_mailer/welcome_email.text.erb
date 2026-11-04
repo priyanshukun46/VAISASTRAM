@@ -1,0 +1,15 @@
+Welcome to VAISASTRAM, <%= @user.name %>!
+
+Your operator account has been created successfully.
+
+Account Details:
+- Email: <%= @user.email %>
+- Role: <%= @user.role.upcase %>
+- Policy Engine: ACTIVE (Fail-closed Ruby enforcement)
+
+Access your workspace:
+<%= workspace_url %>
+
+Governance Note:
+In VAISASTRAM, AI models propose actions but strict Ruby policy rules
+independently govern tool executions. High-risk actions require human-in-the-loop review.

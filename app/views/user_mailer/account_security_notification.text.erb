@@ -1,0 +1,19 @@
+Account Security Notification — VAISASTRAM
+
+Hello <%= @user.name %>,
+
+We detected important security-relevant activity on your VAISASTRAM account.
+
+Event Details:
+- Account Email: <%= @user.email %>
+- Event Type: <%= @details["event"] || @details[:event] || "Security configuration changed" %>
+- Timestamp: <%= Time.current.utc.iso8601 %>
+<% if @details["ip_address"].present? || @details[:ip_address].present? %>
+- Source IP: <%= @details["ip_address"] || @details[:ip_address] %>
+<% end %>
+
+Review Audit Stream:
+<%= audit_url %>
+
+Urgent Action:
+If this activity was not initiated by you, please sign in and change your password immediately.

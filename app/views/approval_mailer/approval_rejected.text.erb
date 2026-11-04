@@ -1,0 +1,14 @@
+[Rejected] Action Denied — VAISASTRAM
+
+An action requested by the agent on your task was rejected by a reviewer.
+Execution of this specific action was prevented.
+
+Details:
+- Task: Task #<%= @task&.id %> (<%= @task&.title %>)
+- Tool / Action: <%= @tool_name %>
+- Reviewer: <%= @reviewer&.name || "Authorized Reviewer" %>
+- Reason: <%= @reason %>
+- Decided At: <%= @reviewed_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+
+Inspect Task:
+<%= workspace_url(task_id: @task&.id) %>

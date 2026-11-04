@@ -1,0 +1,188 @@
+<% content_for :title, "Notification Preferences & Delivery History — VAISASTRAM" %>
+
+<div class="space-y-8">
+  <!-- Header with Platform Mascot Badge -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-200">
+    <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 rounded-xl bg-[#0d0726] text-[#d4f90d] flex items-center justify-center font-mono font-bold text-lg shadow-sm">
+        ✉
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-xl font-black tracking-tight text-[#0d0726]">Notification Center</h1>
+          <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 font-bold">Action Mailer</span>
+          <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">Solid Queue</span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium">Manage email delivery preferences, inspect background queue states, and audit dispatch receipts.</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <%= button_to send_test_email_notification_preferences_path, method: :post, class: "text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition cursor-pointer shadow-2xs flex items-center space-x-1.5 active:scale-98" do %>
+        <span>⚡ Send Test Email</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Audited</div>
+      <div class="text-2xl font-black text-slate-900 mt-1"><%= @stats[:total] %></div>
+      <div class="text-[10px] font-mono text-slate-400 mt-1">Logged in audit chain</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Delivered</div>
+      <div class="text-2xl font-black text-emerald-600 mt-1"><%= @stats[:delivered] %></div>
+      <div class="text-[10px] font-mono text-emerald-600/70 mt-1">Provider message ID confirmed</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Failed Delivery</div>
+      <div class="text-2xl font-black text-rose-600 mt-1"><%= @stats[:failed] %></div>
+      <div class="text-[10px] font-mono text-rose-600/70 mt-1">Queued for background retry</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Preference Skipped</div>
+      <div class="text-2xl font-black text-slate-700 mt-1"><%= @stats[:skipped] %></div>
+      <div class="text-[10px] font-mono text-slate-400 mt-1">Suppressed by user rule</div>
+    </div>
+  </div>
+
+  <!-- Notification Preferences Section -->
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div class="flex items-center space-x-2">
+        <h2 class="text-sm font-bold text-slate-900">Email Notification Preferences</h2>
+        <span class="text-[10px] font-mono text-slate-500">User #<%= current_user.id %> (<%= current_user.email %>)</span>
+      </div>
+      <% if current_user.email_verified? %>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">
+          ✓ Email Verified
+        </span>
+      <% else %>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800">
+          Unverified Email
+        </span>
+      <% end %>
+    </div>
+    <div class="p-6">
+      <%= render "form", preferences: @preferences %>
+    </div>
+  </div>
+
+  <!-- Recent Notification History & Delivery Status Table -->
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div>
+        <h2 class="text-sm font-bold text-slate-900">Recent Notification History & Delivery Status</h2>
+        <p class="text-[11px] text-slate-500">Audit-backed dispatch logs with cryptographic tamper-detection.</p>
+      </div>
+      <span class="text-xs font-mono text-slate-400">Last 50 events</span>
+    </div>
+
+    <% if @recent_notifications.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50/80 font-mono text-[10px] uppercase text-slate-500 tracking-wider">
+              <th class="py-3 px-4 font-bold">Timestamp</th>
+              <th class="py-3 px-4 font-bold">Type</th>
+              <th class="py-3 px-4 font-bold">Subject / Description</th>
+              <th class="py-3 px-4 font-bold">Related Entity</th>
+              <th class="py-3 px-4 font-bold">Status</th>
+              <th class="py-3 px-4 font-bold">Provider / Diagnostics</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-sans">
+            <% @recent_notifications.each do |event| %>
+              <% meta = event.metadata || {} %>
+              <% notif_type = meta["notification_type"] || event.event_type.sub("notification_", "") %>
+              <tr class="hover:bg-slate-50/80 transition">
+                <td class="py-3 px-4 font-mono text-slate-500 text-[11px] whitespace-nowrap">
+                  <%= event.occurred_at.strftime("%Y-%m-%d %H:%M:%S") %>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold
+                    <%= case notif_type
+                        when /approval/ then "bg-amber-100 text-amber-800 border border-amber-200"
+                        when /execution/ then "bg-blue-100 text-blue-800 border border-blue-200"
+                        when /security|policy/ then "bg-rose-100 text-rose-800 border border-rose-200"
+                        else "bg-purple-100 text-purple-800 border border-purple-200"
+                        end %>">
+                    <%= notif_type.to_s.humanize %>
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-slate-800 max-w-xs truncate font-medium">
+                  <%= meta["subject"].presence || meta["reason"].presence || "Platform dispatch" %>
+                </td>
+                <td class="py-3 px-4 font-mono text-[11px] text-slate-600">
+                  <% if event.approval_id.present? %>
+                    <%= link_to "Approval ##{event.approval_id}", approval_path(event.approval_id), class: "underline hover:text-slate-900" %>
+                  <% elsif event.execution_id.present? %>
+                    <%= link_to "Execution ##{event.execution_id}", timeline_execution_path(event.execution_id), class: "underline hover:text-slate-900" %>
+                  <% elsif event.task_id.present? %>
+                    <%= link_to "Task ##{event.task_id}", workspace_path(task_id: event.task_id), class: "underline hover:text-slate-900" %>
+                  <% else %>
+                    <span class="text-slate-400">—</span>
+                  <% end %>
+                </td>
+                <td class="py-3 px-4">
+                  <% case event.status %>
+                  <% when "delivered", "sent" %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">
+                      ✓ Delivered
+                    </span>
+                  <% when "failed" %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-800">
+                      ✗ Failed
+                    </span>
+                  <% when "skipped" %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+                      ○ Skipped
+                    </span>
+                  <% when "queued" %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-800">
+                      ⏳ Queued
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
+                      <%= event.status || "logged" %>
+                    </span>
+                  <% end %>
+                </td>
+                <td class="py-3 px-4 font-mono text-[11px] text-slate-500 max-w-sm truncate">
+                  <% if meta["provider_message_id"].present? %>
+                    <span title="Provider ID: <%= meta["provider_message_id"] %>" class="text-emerald-700">
+                      ID: <%= meta["provider_message_id"].to_s.truncate(30) %>
+                    </span>
+                  <% elsif meta["error_message"].present? %>
+                    <span title="<%= meta["error_message"] %>" class="text-rose-600">
+                      Err: <%= meta["error_message"].to_s.truncate(45) %>
+                    </span>
+                  <% elsif meta["reason"].present? %>
+                    <span class="text-slate-400">
+                      Reason: <%= meta["reason"] %>
+                    </span>
+                  <% else %>
+                    <span class="text-slate-400">—</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="p-12 text-center text-slate-500">
+        <div class="h-12 w-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 font-mono text-xl">
+          ✉
+        </div>
+        <p class="text-sm font-bold text-slate-700">No notifications dispatched yet</p>
+        <p class="text-xs text-slate-400 mt-1">Notifications dispatched for task executions, policy approvals, or account security will appear here.</p>
+        <div class="mt-4">
+          <%= button_to "Send Test Notification", send_test_email_notification_preferences_path, method: :post, class: "text-xs font-bold px-3 py-1.5 rounded-lg bg-[#0d0726] hover:bg-black text-white transition cursor-pointer shadow-xs" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

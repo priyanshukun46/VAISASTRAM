@@ -1,0 +1,63 @@
+<%= form_with url: notification_preferences_path, method: :patch, id: "preferences-form", class: "space-y-6" do |f| %>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Approval Requests -->
+    <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition shadow-xs">
+      <label class="flex items-start space-x-3 cursor-pointer">
+        <%= check_box_tag "preferences[approval_requests]", "1", preferences["approval_requests"], class: "mt-1 h-4 w-4 rounded border-slate-300 text-[#0d0726] focus:ring-[#d4f90d]" %>
+        <div>
+          <span class="text-sm font-bold text-slate-900 block">Approval Requests & Decisions</span>
+          <span class="text-xs text-slate-500 block mt-0.5">Notifications when human approval is required, approved, or rejected.</span>
+        </div>
+      </label>
+    </div>
+
+    <!-- Execution Updates -->
+    <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition shadow-xs">
+      <label class="flex items-start space-x-3 cursor-pointer">
+        <%= check_box_tag "preferences[execution_updates]", "1", preferences["execution_updates"], class: "mt-1 h-4 w-4 rounded border-slate-300 text-[#0d0726] focus:ring-[#d4f90d]" %>
+        <div>
+          <span class="text-sm font-bold text-slate-900 block">Execution Lifecycle Updates</span>
+          <span class="text-xs text-slate-500 block mt-0.5">Alerts when agent tasks start, complete successfully, or encounter execution failures.</span>
+        </div>
+      </label>
+    </div>
+
+    <!-- Security Alerts -->
+    <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition shadow-xs">
+      <label class="flex items-start space-x-3 cursor-pointer">
+        <%= check_box_tag "preferences[security_alerts]", "1", preferences["security_alerts"], class: "mt-1 h-4 w-4 rounded border-slate-300 text-[#0d0726] focus:ring-[#d4f90d]" %>
+        <div>
+          <span class="text-sm font-bold text-slate-900 block">Policy & Security Alerts</span>
+          <span class="text-xs text-slate-500 block mt-0.5">Alerts when the Ruby policy engine blocks a tool invocation or detects anomalies.</span>
+        </div>
+      </label>
+    </div>
+
+    <!-- Account Notifications -->
+    <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition shadow-xs">
+      <label class="flex items-start space-x-3 cursor-pointer">
+        <%= check_box_tag "preferences[account_notifications]", "1", preferences["account_notifications"], class: "mt-1 h-4 w-4 rounded border-slate-300 text-[#0d0726] focus:ring-[#d4f90d]" %>
+        <div>
+          <span class="text-sm font-bold text-slate-900 block">General Account Notifications</span>
+          <span class="text-xs text-slate-500 block mt-0.5">Welcome emails, team onboarding notifications, and email verification updates.</span>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Security Critical Note -->
+  <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 flex items-start space-x-3">
+    <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+    <div>
+      <strong class="font-bold">Security Enforcement Rule:</strong>
+      Critical account security alerts (such as password reset instructions, suspicious sign-in locks, or credential modifications) are mandatory and cannot be disabled by user preferences.
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between pt-2">
+    <%= f.submit "Save Notification Preferences", class: "text-xs font-bold px-4 py-2 rounded-lg bg-[#0d0726] hover:bg-black text-white transition shadow-sm cursor-pointer active:scale-98" %>
+    <span class="text-xs text-slate-400 font-mono">Changes audited in PostgreSQL chain</span>
+  </div>
+<% end %>

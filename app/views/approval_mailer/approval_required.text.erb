@@ -1,0 +1,19 @@
+[Action Required] Human Approval Needed — VAISASTRAM
+
+An autonomous agent action requires human review and authorization before tool execution can proceed.
+
+Details:
+- Approval Request: Approval #<%= @approval.id %>
+- Task: Task #<%= @task&.id %> (<%= @task&.title %>)
+- Tool / Action: <%= @tool_name %>
+- Expires At: <%= @expires_at ? @expires_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") : "24 hours from request" %>
+- Arguments:
+<%= JSON.pretty_generate(@arguments_summary) %>
+
+Review Request:
+<%= approval_url(@approval) %>
+
+GOVERNANCE CONSTRAINT:
+This email DOES NOT approve or execute this action. You must log in to
+VAISASTRAM with your authorized credentials to review and submit a decision.
+All decisions require normal authentication and authorization.

@@ -31,14 +31,16 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
-
-  # Make template changes take effect immediately.
+  # Development Action Mailer: Never send real emails in development (Constraint 10)
+  # Accumulate delivered emails in ActionMailer::Base.deliveries and allow Action Mailer Previews
+  config.action_mailer.delivery_method = :test
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
   config.action_mailer.perform_caching = false
-
-  # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("APP_HOST", "localhost"),
+    port: (ENV.fetch("APP_PORT", 3000).to_i unless ENV["APP_HOST"].present?)
+  }.compact
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

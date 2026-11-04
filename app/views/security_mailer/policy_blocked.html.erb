@@ -1,0 +1,34 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 0;">Policy Guard: Action Blocked</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  An autonomous agent attempted to invoke an action that violated governance policies. The Ruby policy engine denied execution (fail-closed enforcement).
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Prohibited Action:</td>
+      <td style="padding: 6px 0;"><code style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;"><%= @action_key %></code></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Policy Decision:</td>
+      <td style="padding: 6px 0; color: #dc2626; font-weight: bold;">DENIED</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Reason:</td>
+      <td style="padding: 6px 0; color: #334155;"><%= @reason %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Blocked At:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @blocked_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %></td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "Inspect Policies in Policy Center", policies_url, class: "button btn-accent" %>
+</p>
+
+<div class="security-notice">
+  <strong>Governance Rule:</strong> The agent plan cannot override Ruby policy decisions. AI models never make authorization decisions in VAISASTRAM.
+</div>

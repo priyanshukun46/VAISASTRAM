@@ -1,0 +1,11 @@
+Account Security Notice — VAISASTRAM
+
+Important security activity has occurred on your account.
+
+Details:
+- Account: <%= @user.email %>
+- Notice: <%= @details["event"] || @details[:event] || "Security settings modified" %>
+- Timestamp: <%= @occurred_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+
+Review Audit Center:
+<%= audit_url %>

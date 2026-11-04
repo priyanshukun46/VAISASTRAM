@@ -1,0 +1,34 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #16a34a; margin-top: 0;">Action Approved</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  An action on your task has been reviewed and approved by an authorized reviewer.
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Task:</td>
+      <td style="padding: 6px 0;">Task #<%= @task&.id %> — <%= @task&.title %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Tool / Action:</td>
+      <td style="padding: 6px 0;"><code style="background-color: #0d0726; color: #d4f90d; padding: 2px 6px; border-radius: 4px; font-size: 12px;"><%= @tool_name %></code></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Reviewed By:</td>
+      <td style="padding: 6px 0; font-weight: 600;"><%= @reviewer&.name || "Authorized Reviewer" %> (<%= @reviewer&.role || "admin" %>)</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Decision Timestamp:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @reviewed_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %></td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "View Execution Timeline", timeline_execution_url(@execution), class: "button btn-accent" %>
+</p>
+
+<div class="security-notice">
+  <strong>Audit Trail:</strong> The human approval decision was verified with cryptographic action fingerprint binding and recorded into the immutable audit chain.
+</div>

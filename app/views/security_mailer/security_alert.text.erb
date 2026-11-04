@@ -1,0 +1,18 @@
+[Security Alert] Important Governance Notification — VAISASTRAM
+
+A critical security or governance event has been recorded by the VAISASTRAM platform.
+
+Details:
+- Alert Type: <%= @details["type"] || @details[:type] || "GOVERNANCE_SECURITY_EVENT" %>
+- Description: <%= @details["message"] || @details[:message] || @details["description"] || @details[:description] || "Suspicious or non-compliant activity detected" %>
+- Occurred At: <%= @occurred_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+<% if @details["action_fingerprint"].present? || @details[:action_fingerprint].present? %>
+- Action Fingerprint: <%= @details["action_fingerprint"] || @details[:action_fingerprint] %>
+<% end %>
+
+Review Audit Stream:
+<%= audit_url %>
+
+Audit Notice:
+This event was logged with hash chaining into the PostgreSQL append-only
+audit trail for compliance verification.

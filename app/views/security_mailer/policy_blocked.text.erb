@@ -1,0 +1,17 @@
+[Policy Guard] Action Prohibited — VAISASTRAM
+
+An autonomous agent attempted to invoke an action that violated governance policies.
+The Ruby policy engine denied execution (fail-closed enforcement).
+
+Details:
+- Action: <%= @action_key %>
+- Policy Decision: DENIED
+- Reason: <%= @reason %>
+- Blocked At: <%= @blocked_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+
+Inspect Policy Center:
+<%= policies_url %>
+
+Governance Rule:
+The agent plan cannot override Ruby policy decisions. AI models never
+make authorization decisions in VAISASTRAM.

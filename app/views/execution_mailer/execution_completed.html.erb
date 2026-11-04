@@ -1,0 +1,30 @@
+<h2 style="font-size: 20px; font-weight: 800; color: #16a34a; margin-top: 0;">Task Execution Completed</h2>
+
+<p style="color: #334155; font-size: 14px; margin-bottom: 20px;">
+  Task #<%= @task.id %> has finished running with all policy and tool constraints verified.
+</p>
+
+<div class="card-box">
+  <table style="width: 100%; font-size: 13px; color: #334155;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b; width: 140px;">Task Title:</td>
+      <td style="padding: 6px 0; font-weight: bold;"><%= @task.title %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Completed At:</td>
+      <td style="padding: 6px 0; font-family: monospace;"><%= @completed_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Steps Executed:</td>
+      <td style="padding: 6px 0; font-weight: 600;"><%= @steps_count %> step(s)</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Audit Chain:</td>
+      <td style="padding: 6px 0; color: #16a34a; font-weight: 600;">Cryptographically Verified & Sealed</td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <%= link_to "Review Execution & Audit Trail", timeline_execution_url(@execution), class: "button btn-accent" %>
+</p>

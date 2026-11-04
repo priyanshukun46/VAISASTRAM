@@ -40,9 +40,13 @@ module Audit
       mcp_server_removed
     ].freeze
 
+    NOTIFICATION_EVENTS = %w[
+      notification_queued notification_sent notification_failed notification_skipped notification_preference_updated
+    ].freeze
+
     ALL_EVENT_TYPES = (
       TASK_EVENTS + PLANNING_EVENTS + POLICY_EVENTS +
-      TOOL_EVENTS + APPROVAL_EVENTS + PROVIDER_EVENTS + MCP_EVENTS
+      TOOL_EVENTS + APPROVAL_EVENTS + PROVIDER_EVENTS + MCP_EVENTS + NOTIFICATION_EVENTS
     ).uniq.freeze
 
     ACTOR_TYPES = %w[user agent policy_engine system].freeze

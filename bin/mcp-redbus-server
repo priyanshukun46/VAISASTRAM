@@ -1,0 +1,401 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "json"
+require "date"
+
+# RedBus Fare & Ticket Inspector MCP Server
+# Implements the Model Context Protocol (MCP) 2024-11-05 specification over STDIO.
+class RedBusMcpServer
+  PROTOCOL_VERSION = "2024-11-05"
+  SERVER_INFO = {
+    name: "RedBus Fare & Ticket Inspector",
+    version: "1.0.0"
+  }.freeze
+
+  POPULAR_OPERATORS = [
+    { name: "IntrCity SmartBus", rating: 4.8, type: "AC Sleeper (2+1)" },
+    { name: "Zingbus Plus", rating: 4.7, type: "Multi-Axle Volvo AC Sleeper" },
+    { name: "KSRTC Airavat Club Class", rating: 4.6, type: "Volvo Multi-Axle AC" },
+    { name: "VRL Travels", rating: 4.5, type: "I-Shift Multi-Axle B11R AC Sleeper" },
+    { name: "Orange Tours and Travels", rating: 4.6, type: "BharatBenz AC Sleeper (2+1)" },
+    { name: "NueGo Electric AC", rating: 4.7, type: "Pure Electric AC Seater" },
+    { name: "SRS Travels", rating: 4.3, type: "Non-AC Sleeper (2+1)" }
+  ].freeze
+
+  ROUTE_DISTANCES_KM = {
+    "bangalore-hyderabad" => 570,
+    "bangalore-chennai" => 350,
+    "bangalore-goa" => 560,
+    "bangalore-coimbatore" => 365,
+    "delhi-jaipur" => 280,
+    "delhi-manali" => 535,
+    "delhi-chandigarh" => 250,
+    "mumbai-pune" => 150,
+    "mumbai-goa" => 590,
+    "mumbai-ahmedabad" => 530,
+    "pune-hyderabad" => 560,
+    "chennai-coimbatore" => 500,
+    "kolkata-siliguri" => 580
+  }.freeze
+
+  def run
+    $stdin.sync = true
+    $stdout.sync = true
+
+    $stdin.each_line do |line|
+      line = line.strip
+      next if line.empty?
+
+      begin
+        request = JSON.parse(line)
+        handle_request(request)
+      rescue JSON::ParserError => e
+        send_error(nil, -32700, "Parse error: #{e.message}")
+      rescue StandardError => e
+        send_error(nil, -32603, "Internal error: #{e.message}")
+      end
+    end
+  end
+
+  private
+
+  def handle_request(req)
+    id = req["id"]
+    method = req["method"]
+    params = req["params"] || {}
+
+    case method
+    when "initialize"
+      send_result(id, {
+        protocolVersion: PROTOCOL_VERSION,
+        serverInfo: SERVER_INFO,
+        capabilities: {
+          tools: { listChanged: false }
+        }
+      })
+    when "notifications/initialized"
+      # Notification: no response required in JSON-RPC
+    when "ping"
+      send_result(id, {})
+    when "tools/list"
+      send_result(id, { tools: tool_definitions })
+    when "tools/call"
+      tool_name = params["name"]
+      args = params["arguments"] || {}
+      dispatch_tool(id, tool_name, args)
+    else
+      send_error(id, -32601, "Method '#{method}' not found")
+    end
+  end
+
+  def tool_definitions
+    [
+      {
+        name: "search_bus_routes",
+        description: "Search intercity bus schedules and live ticket prices across operators on RedBus routes.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            source: {
+              type: "string",
+              description: "Departure city (e.g. Bangalore, Delhi, Mumbai, Hyderabad, Pune, Chennai)"
+            },
+            destination: {
+              type: "string",
+              description: "Arrival city (e.g. Hyderabad, Jaipur, Goa, Manali, Pune, Coimbatore)"
+            },
+            travel_date: {
+              type: "string",
+              description: "Date of journey in YYYY-MM-DD format (defaults to tomorrow if omitted)"
+            },
+            ac_only: {
+              type: "boolean",
+              description: "Filter only AC buses (default: false)"
+            }
+          },
+          required: ["source", "destination"]
+        }
+      },
+      {
+        name: "get_ticket_price",
+        description: "Get comprehensive ticket fare breakdown including base fare, GST (5%), dynamic pricing, and seat categories for a specific bus route.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            source: {
+              type: "string",
+              description: "Origin city"
+            },
+            destination: {
+              type: "string",
+              description: "Destination city"
+            },
+            bus_operator: {
+              type: "string",
+              description: "Preferred bus operator name (e.g. IntrCity SmartBus, Zingbus, KSRTC, VRL Travels)"
+            },
+            seat_category: {
+              type: "string",
+              enum: ["seater", "semi_sleeper", "single_sleeper", "double_sleeper"],
+              description: "Seat category for exact pricing"
+            }
+          },
+          required: ["source", "destination"]
+        }
+      },
+      {
+        name: "check_seat_layout",
+        description: "Check live seat availability, berth configuration (Lower vs Upper deck), and window seat options for a bus route.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            source: {
+              type: "string",
+              description: "Departure city"
+            },
+            destination: {
+              type: "string",
+              description: "Arrival city"
+            },
+            operator: {
+              type: "string",
+              description: "Bus operator (optional)"
+            }
+          },
+          required: ["source", "destination"]
+        }
+      },
+      {
+        name: "estimate_route_fare",
+        description: "Calculate expected price bands (Budget Non-AC, Executive AC, Luxury Volvo Sleeper) for any route distance.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            source: {
+              type: "string",
+              description: "Origin city"
+            },
+            destination: {
+              type: "string",
+              description: "Destination city"
+            }
+          },
+          required: ["source", "destination"]
+        }
+      }
+    ]
+  end
+
+  def dispatch_tool(id, tool_name, args)
+    case tool_name
+    when "search_bus_routes"
+      handle_search_routes(id, args)
+    when "get_ticket_price"
+      handle_get_ticket_price(id, args)
+    when "check_seat_layout"
+      handle_check_seat_layout(id, args)
+    when "estimate_route_fare"
+      handle_estimate_route_fare(id, args)
+    else
+      send_error(id, -32602, "Unknown tool '#{tool_name}'")
+    end
+  end
+
+  def handle_search_routes(id, args)
+    src = clean_city(args["source"])
+    dst = clean_city(args["destination"])
+    date = (args["travel_date"].to_s.strip.empty?) ? (Date.today + 1).strftime("%Y-%m-%d") : args["travel_date"].to_s.strip
+    ac_only = args["ac_only"] == true
+
+    distance = lookup_distance(src, dst)
+    base_rate_per_km = 1.85
+
+    results = []
+    times = [
+      ["20:30", "06:00", "9h 30m"],
+      ["21:15", "06:45", "9h 30m"],
+      ["22:00", "07:30", "9h 30m"],
+      ["22:45", "08:15", "9h 30m"],
+      ["23:30", "09:00", "9h 30m"]
+    ]
+
+    POPULAR_OPERATORS.each_with_index do |op, idx|
+      next if ac_only && !op[:type].include?("AC")
+
+      t = times[idx % times.size]
+      multiplier = op[:type].include?("Volvo") ? 1.4 : (op[:type].include?("Sleeper") ? 1.25 : 1.0)
+      price = (distance * base_rate_per_km * multiplier).round(-1)
+      seats_left = 6 + (idx * 3)
+
+      results << {
+        bus_id: "RB-#{src[0..2].upcase}-#{dst[0..2].upcase}-#{101 + idx}",
+        operator: op[:name],
+        bus_type: op[:type],
+        rating: op[:rating],
+        departure: t[0],
+        arrival: t[1],
+        duration: t[2],
+        starting_price_inr: price,
+        seats_available: seats_left
+      }
+    end
+
+    text_output = <<~REPORT
+      === REDBUS TICKET SEARCH: #{src.capitalize} -> #{dst.capitalize} ===
+      Travel Date: #{date} | Route Distance: ~#{distance} km | Found: #{results.size} buses
+
+      #{results.map { |r| "• [#{r[:bus_id]}] #{r[:operator]} (#{r[:rating]} ★)\n  Type: #{r[:bus_type]}\n  Departs: #{r[:departure]} -> Arrives: #{r[:arrival]} (#{r[:duration]})\n  Ticket Price: ₹#{r[:starting_price_inr]} | Available Seats: #{r[:seats_available]}\n" }.join("\n")}
+      Note: Fares include 5% GST. Cancellation policy: 100% refund up to 12h before departure.
+    REPORT
+
+    send_tool_content(id, text_output, { total_buses: results.size, route_distance_km: distance, date: date, buses: results })
+  end
+
+  def handle_get_ticket_price(id, args)
+    src = clean_city(args["source"])
+    dst = clean_city(args["destination"])
+    operator = args["bus_operator"].to_s.strip.empty? ? "IntrCity SmartBus" : args["bus_operator"].to_s.strip
+    category = args["seat_category"].to_s.strip.empty? ? "semi_sleeper" : args["seat_category"].to_s.strip
+
+    distance = lookup_distance(src, dst)
+
+    base_multiplier = case category.to_s.downcase
+    when "single_sleeper" then 1.45
+    when "double_sleeper" then 1.30
+    when "semi_sleeper"   then 1.15
+    else 1.00 # seater
+    end
+
+    base_rate = (distance * 1.70 * base_multiplier).round(0)
+    gst_amount = (base_rate * 0.05).round(2)
+    operator_discount = (base_rate * 0.08).round(0)
+    service_charge = 25.0
+    total_price = (base_rate - operator_discount + gst_amount + service_charge).round(0)
+
+    breakdown = <<~BREAKDOWN
+      === REDBUS FARE BREAKDOWN: #{src.capitalize} -> #{dst.capitalize} ===
+      Operator: #{operator}
+      Seat Category: #{category.to_s.split('_').map(&:capitalize).join(' ')}
+      Distance: #{distance} km
+
+      • Base Ticket Fare:        ₹#{base_rate}
+      • Operator Online Discount: -₹#{operator_discount}
+      • GST (5% Passenger Tax):   +₹#{gst_amount}
+      • Platform Service Charge:  +₹#{service_charge}
+      ----------------------------------------
+      TOTAL TICKET PRICE:        ₹#{total_price} (INR)
+
+      Live Fare Assurance: Locked for 15 minutes during booking reservation.
+    BREAKDOWN
+
+    send_tool_content(id, breakdown, {
+      source: src,
+      destination: dst,
+      operator: operator,
+      category: category,
+      base_fare_inr: base_rate,
+      discount_inr: operator_discount,
+      gst_inr: gst_amount,
+      total_fare_inr: total_price
+    })
+  end
+
+  def handle_check_seat_layout(id, args)
+    src = clean_city(args["source"])
+    dst = clean_city(args["destination"])
+    operator = args["operator"].to_s.strip.empty? ? "Zingbus Plus Multi-Axle Volvo" : args["operator"].to_s.strip
+
+    layout = <<~SEATS
+      === REDBUS SEAT AVAILABILITY: #{src.capitalize} -> #{dst.capitalize} ===
+      Bus: #{operator} (2+1 Luxury Sleeper)
+
+      [LOWER DECK]
+      Window (Single): [L1: Available ₹1,350] [L4: Booked] [L7: Available ₹1,350] [L10: Available (Women)]
+      Aisle (Double):  [L2, L3: Booked]     [L5, L6: Available ₹1,150] [L8, L9: Available ₹1,150]
+
+      [UPPER DECK]
+      Window (Single): [U1: Available ₹1,450] [U4: Available ₹1,450] [U7: Booked] [U10: Available ₹1,450]
+      Aisle (Double):  [U2, U3: Available ₹1,250] [U5, U6: Available ₹1,250] [U8, U9: Booked]
+
+      Total Seats: 30 | Available: 18 (6 Single Berths, 12 Double Berths)
+    SEATS
+
+    send_tool_content(id, layout, { total_seats: 30, available_seats: 18, single_berths_available: 6 })
+  end
+
+  def handle_estimate_route_fare(id, args)
+    src = clean_city(args["source"])
+    dst = clean_city(args["destination"])
+    dist = lookup_distance(src, dst)
+
+    budget_fare = (dist * 1.25).round(-1)
+    executive_fare = (dist * 1.85).round(-1)
+    luxury_sleeper_fare = (dist * 2.50).round(-1)
+
+    text = <<~EST
+      === REDBUS ROUTE FARE ESTIMATION: #{src.capitalize} -> #{dst.capitalize} ===
+      Estimated Distance: ~#{dist} km
+
+      1. Budget Non-AC Seater:       ₹#{budget_fare} - ₹#{budget_fare + 150}
+      2. Executive AC Semi-Sleeper:  ₹#{executive_fare} - ₹#{executive_fare + 250}
+      3. Luxury Volvo 9600 Sleeper:  ₹#{luxury_sleeper_fare} - ₹#{luxury_sleeper_fare + 400}
+
+      Pricing Trends: Weekend trips (Fri-Sun) typically observe +15-20% demand surge.
+    EST
+
+    send_tool_content(id, text, {
+      distance_km: dist,
+      budget_inr: budget_fare,
+      executive_inr: executive_fare,
+      luxury_sleeper_inr: luxury_sleeper_fare
+    })
+  end
+
+  def clean_city(city_str)
+    city_str.to_s.strip.downcase.gsub(/[^a-z]+/, "")
+  end
+
+  def lookup_distance(src, dst)
+    key1 = "#{src}-#{dst}"
+    key2 = "#{dst}-#{src}"
+
+    ROUTE_DISTANCES_KM[key1] || ROUTE_DISTANCES_KM[key2] || 450
+  end
+
+  def send_tool_content(id, text, metadata = {})
+    send_result(id, {
+      content: [
+        {
+          type: "text",
+          text: text
+        }
+      ],
+      isError: false,
+      metadata: metadata
+    })
+  end
+
+  def send_result(id, result)
+    response = {
+      jsonrpc: "2.0",
+      id: id,
+      result: result
+    }
+    $stdout.puts(response.to_json)
+  end
+
+  def send_error(id, code, message)
+    response = {
+      jsonrpc: "2.0",
+      id: id,
+      error: {
+        code: code,
+        message: message
+      }
+    }
+    $stdout.puts(response.to_json)
+  end
+end
+
+RedBusMcpServer.new.run if __FILE__ == $PROGRAM_NAME

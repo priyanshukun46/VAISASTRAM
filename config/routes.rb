@@ -70,4 +70,12 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Notification Preferences & History
+  resource :notification_preferences, only: [:show, :update] do
+    member do
+      post :send_test_email
+    end
+  end
+  get "verify_email", to: "notification_preferences#verify_email", as: :verify_email
 end

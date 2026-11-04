@@ -85,6 +85,8 @@ module Approvals
         )
       end
 
+      Notifications::Dispatcher.dispatch(:approval_required, approval: approval)
+
       approval
     end
 
@@ -161,6 +163,8 @@ module Approvals
         )
       end
 
+      Notifications::Dispatcher.dispatch(:approval_approved, approval: approval, reviewer: reviewer)
+
       # 9. Resume execution via Tools::Executor outside the decision lock
       exec_result = Tools::Executor.resume_approved(approval, reviewer: reviewer)
 
@@ -188,6 +192,16 @@ module Approvals
           actor_id: reviewer.id.to_s,
           metadata: {
             reason: "Fingerprint validation failed: action arguments, tool name, or context were modified"
+          }
+        )
+
+        Notifications::Dispatcher.dispatch(
+          :security_alert,
+          user: reviewer,
+          details: {
+            type: "FINGERPRINT_TAMPERING_DETECTED",
+            message: "Action parameters were modified after approval was requested. Approval ##{approval.id} has been invalidated.",
+            action_fingerprint: approval.action_fingerprint
           }
         )
       end
@@ -267,6 +281,8 @@ module Approvals
           }
         )
       end
+
+      Notifications::Dispatcher.dispatch(:approval_rejected, approval: approval, reviewer: reviewer, reason: rejection_note)
 
       Approvals::Decision.new(
         status: "rejected",

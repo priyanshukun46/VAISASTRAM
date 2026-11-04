@@ -228,6 +228,18 @@ class McpServersController < ApplicationController
   def marketplace_templates
     [
       {
+        key: "redbus",
+        name: "RedBus Fare & Ticket Inspector",
+        description: "Official Model Context Protocol (MCP) server for intercity bus ticket prices, seat layout inspection, operator comparisons, and route fare estimation across Indian routes.",
+        transport_type: "stdio",
+        command: "ruby",
+        arguments: ["bin/mcp-redbus-server"],
+        allow_local_connections: false,
+        icon: "truck",
+        category: "Travel & Logistics",
+        initial_tools: ["search_bus_routes", "get_ticket_price", "check_seat_layout", "estimate_route_fare"]
+      },
+      {
         key: "wordcraft",
         name: "WordCraft Document Engine",
         description: "Official MCP integration for WordCraft Markdown document manipulation, page rendering, and command inspection.",

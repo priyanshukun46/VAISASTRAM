@@ -1,0 +1,12 @@
+Task Execution Started — VAISASTRAM
+
+The autonomous agent has started processing Task #<%= @task.id %>.
+
+Details:
+- Task: Task #<%= @task.id %> (<%= @task.title %>)
+- Agent: <%= @agent.name %>
+- Model: <%= @execution.provider %> / <%= @execution.ai_model %>
+- Started At: <%= @started_at.utc.strftime("%Y-%m-%d %H:%M:%S UTC") %>
+
+Track Live Execution:
+<%= timeline_execution_url(@execution) %>
