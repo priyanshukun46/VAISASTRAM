@@ -326,48 +326,55 @@
     </p>
 
     <!-- Signature Floating Prompt Input Box (Active Form Submitting to Workspace) -->
-    <div class="mt-8 max-w-2xl mx-auto text-left">
+    <div class="mt-8 max-w-3xl mx-auto text-left">
       <%= form_with url: workspace_path, method: :post, local: true, class: "bg-white rounded-2xl border border-slate-300 shadow-sm hover:shadow-md transition duration-200 p-4 sm:p-5 relative" do |f| %>
         <%= f.label :instruction, "Task Instruction", class: "sr-only" %>
         <%= f.text_area :instruction,
           id: "workspace-prompt",
           data: { workspace_target: "prompt" },
           rows: 3,
-          class: "w-full bg-transparent border-0 text-slate-900 placeholder-slate-400 text-sm sm:text-base focus:ring-0 focus:outline-none resize-none",
+          class: "w-full bg-transparent border-0 text-slate-900 placeholder-slate-400 text-sm sm:text-base focus:ring-0 focus:outline-none resize-none leading-relaxed",
           placeholder: "Ask a question, explain a concept, brainstorm ideas, or plan a task... (e.g. 'Explain Raft consensus' or 'Verify invoice INV-100 and prepare payment')" %>
 
         <!-- Bottom Toolbar inside input card -->
-        <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-2">
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-2 gap-2 sm:gap-4">
           <!-- Left tool icons -->
-          <div class="flex items-center space-x-2 text-slate-500">
-            <button type="button" title="General & Domain Context" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
+          <div class="flex items-center space-x-1.5 sm:space-x-2 text-slate-500 shrink-0 min-w-0">
+            <button type="button" title="General & Domain Context" class="p-1.5 rounded-lg text-slate-400 hover:text-black hover:bg-slate-100 transition cursor-pointer shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
               </svg>
             </button>
-            <button type="button" title="Allowlisted Domain Tools: lookup_invoice, verify_invoice, prepare_payment" class="p-1.5 rounded-lg hover:bg-slate-100 hover:text-black transition cursor-pointer">
+            <button type="button" title="Allowlisted Domain Tools: lookup_invoice, verify_invoice, prepare_payment" class="p-1.5 rounded-lg text-slate-400 hover:text-black hover:bg-slate-100 transition cursor-pointer shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
-            <span class="text-[11px] font-mono text-slate-400">3 domain tools enabled</span>
+            <span class="inline-flex items-center space-x-1 text-[11px] font-mono text-slate-500 whitespace-nowrap shrink-0">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="hidden sm:inline">3 domain tools enabled</span>
+              <span class="sm:hidden">3 tools</span>
+            </span>
           </div>
 
           <!-- Right: Model selector & Action button -->
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-mono font-medium text-emerald-900" title="Choose which AI model plans this task">
-              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <div class="flex items-center space-x-2 shrink-0">
+            <!-- AI Selector: Just an arrow, no text -->
+            <div class="relative flex items-center justify-center h-9 w-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 transition shadow-2xs hover:scale-102 active:scale-98 cursor-pointer shrink-0" title="Select AI Model (Current: <%= Ai::ModelCatalog.find(@selected_model)&.label || 'Auto' %>)">
+              <svg class="w-4 h-4 text-emerald-800 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+              </svg>
               <%= f.label :ai_model, "AI model", class: "sr-only" %>
               <%= f.select :ai_model,
                     options_for_select(Ai::ModelCatalog.options_for_select, selected: @selected_model, disabled: Ai::ModelCatalog.disabled_ids),
                     {},
                     id: "ai-model-select",
-                    class: "bg-transparent border-0 py-0 pl-0 pr-6 text-xs font-mono font-medium text-emerald-900 focus:ring-0 focus:outline-none cursor-pointer" %>
+                    class: "absolute inset-0 w-full h-full opacity-0 cursor-pointer focus:ring-2 focus:ring-[#7c5cfc] focus:outline-none rounded-xl" %>
             </div>
 
             <%= f.button type: :submit,
-              class: "h-9 px-3 rounded-xl bg-[#0d0726] hover:bg-black text-white flex items-center space-x-1.5 transition shadow-xs hover:scale-102 active:scale-98 cursor-pointer",
+              class: "h-9 px-3.5 rounded-xl bg-[#0d0726] hover:bg-black text-white flex items-center space-x-1.5 transition shadow-xs hover:scale-102 active:scale-98 cursor-pointer shrink-0",
               title: "Plan Execution with AI Planner" do %>
               <span class="text-xs font-bold uppercase tracking-wider font-mono">Plan</span>
               <svg class="w-3.5 h-3.5 text-[#d4f90d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -379,53 +386,59 @@
       <% end %>
 
       <!-- Category / Suggestion Pills for Testing General-Purpose & Domain Scenarios -->
-      <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Who are you and what is your governance architecture?"
-          class="px-3 py-1.5 rounded-md bg-[#0d0726] hover:bg-black text-[#d4f90d] text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer border border-[#d4f90d]/30">
-          WHO ARE YOU? (CONVERSATION)
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#0d0726] hover:bg-black text-[#d4f90d] text-[11px] font-mono font-bold uppercase tracking-wider shadow-2xs hover:shadow-xs transition cursor-pointer border border-[#d4f90d]/30">
+          <span class="h-1.5 w-1.5 rounded-full bg-[#d4f90d]"></span>
+          <span>WHO ARE YOU? (CONVERSATION)</span>
         </button>
 
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Explain how distributed consensus works in modern databases."
-          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          EXPLAIN CONCEPTS (TECHNICAL)
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-[#7c5cfc] hover:border-[#7c5cfc] text-[11px] font-mono font-semibold uppercase tracking-wider shadow-2xs hover:shadow-xs transition cursor-pointer border border-slate-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-[#7c5cfc]"></span>
+          <span>EXPLAIN CONCEPTS (TECHNICAL)</span>
         </button>
 
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Brainstorm architecture ideas for an event-driven microservices platform."
-          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          BRAINSTORMING
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 hover:border-indigo-400 text-[11px] font-mono font-semibold uppercase tracking-wider shadow-2xs hover:shadow-xs transition cursor-pointer border border-slate-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+          <span>BRAINSTORMING</span>
         </button>
 
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Verify invoice INV-100 and prepare a payment of ₹5,000 for server hosting."
-          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          ACTION PLAN (FINANCIAL DOMAIN)
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 hover:border-emerald-400 text-[11px] font-mono font-semibold uppercase tracking-wider shadow-2xs hover:shadow-xs transition cursor-pointer border border-slate-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+          <span>ACTION PLAN (FINANCIAL DOMAIN)</span>
         </button>
 
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Prepare payment for the vendor invoice."
-          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          CLARIFICATION (MISSING INFO)
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 hover:border-amber-400 text-[11px] font-mono font-semibold uppercase tracking-wider shadow-2xs hover:shadow-xs transition cursor-pointer border border-slate-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+          <span>CLARIFICATION (MISSING INFO)</span>
         </button>
 
         <button
           type="button"
           data-action="click->workspace#setPrompt"
           data-prompt-text="Execute arbitrary shell command to wipe database records."
-          class="px-3 py-1.5 rounded-md bg-[#7c5cfc] hover:bg-[#6b47fc] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:shadow transition cursor-pointer">
-          UNPLANNABLE (PROHIBITED)
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 hover:border-rose-400 text-[11px] font-mono font-semibold uppercase tracking-wider shadow-2xs hover:shadow-xs transition cursor-pointer border border-slate-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+          <span>UNPLANNABLE (PROHIBITED)</span>
         </button>
       </div>
     </div>
