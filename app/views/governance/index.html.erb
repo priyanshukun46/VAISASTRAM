@@ -1,0 +1,81 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#7c5cfc]/15 text-[#7c5cfc] border border-[#7c5cfc]/20">
+          GOVERNANCE & EVALUATION
+        </span>
+        <span class="text-xs font-mono text-slate-500">
+          Autonomy with Accountability
+        </span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black font-sans text-[#0d0726] tracking-tight mt-1">
+        Deterministic Governance Control Plane
+      </h1>
+      <p class="text-xs sm:text-sm font-mono text-slate-500 mt-1">
+        AI proposes. Ruby decides. Humans approve.
+      </p>
+    </div>
+
+    <!-- User Scope Badge -->
+    <div class="flex items-center space-x-2">
+      <span class="text-xs font-mono px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-700 shadow-2xs">
+        Scope: 
+        <span class="font-bold <%= current_user.admin? ? 'text-indigo-600' : current_user.auditor? ? 'text-emerald-600' : 'text-slate-900' %>">
+          <%= current_user.admin? ? "System-wide (Admin)" : current_user.auditor? ? "System-wide (Auditor)" : "Tenant: #{current_user.email}" %>
+        </span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Date Range Filter Bar -->
+  <%= render "date_filter" %>
+
+  <!-- Navigation Tabs -->
+  <div class="border-b border-slate-200">
+    <nav class="-mb-px flex space-x-2 overflow-x-auto pb-1" aria-label="Tabs">
+      <% 
+        tabs = [
+          ["overview", "Overview"],
+          ["policies", "Policy Analytics"],
+          ["approvals", "Approval Analytics"],
+          ["executions", "Execution Analytics"],
+          ["providers", "AI Providers"],
+          ["audit", "Audit Health"],
+          ["evaluations", "Evaluation Suite"],
+          ["scorecard", "Scorecard"]
+        ]
+      %>
+      <% tabs.each do |tab_id, label| %>
+        <% active = (@active_tab == tab_id) %>
+        <%= link_to governance_path(tab: tab_id, range: @scope.range, start_date: params[:start_date], end_date: params[:end_date]),
+                    class: "whitespace-nowrap py-2.5 px-4 rounded-xl text-xs font-mono font-bold transition #{active ? 'bg-[#0d0726] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
+          <%= label %>
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+
+  <!-- Dynamic Tab Content -->
+  <div id="governance_tab_content">
+    <% case @active_tab %>
+    <% when "overview" %>
+      <%= render "overview" %>
+    <% when "policies" %>
+      <%= render "policy_analytics" %>
+    <% when "approvals" %>
+      <%= render "approval_analytics" %>
+    <% when "executions" %>
+      <%= render "execution_analytics" %>
+    <% when "providers" %>
+      <%= render "provider_analytics" %>
+    <% when "audit" %>
+      <%= render "audit_health" %>
+    <% when "evaluations" %>
+      <%= render "evaluations" %>
+    <% when "scorecard" %>
+      <%= render "scorecard" %>
+    <% end %>
+  </div>
+</div>

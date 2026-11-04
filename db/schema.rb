@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_04_064500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -28,8 +28,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["action_key"], name: "index_agent_steps_on_action_key"
+    t.index ["created_at"], name: "index_agent_steps_on_created_at"
     t.index ["execution_id", "position"], name: "index_agent_steps_on_execution_and_position", unique: true
     t.index ["execution_id"], name: "index_agent_steps_on_execution_id"
+    t.index ["policy_decision"], name: "index_agent_steps_on_policy_decision"
     t.index ["risk_level"], name: "index_agent_steps_on_risk_level"
     t.index ["status"], name: "index_agent_steps_on_status"
     t.check_constraint "policy_decision IS NULL OR (policy_decision::text = ANY (ARRAY['allow'::character varying, 'deny'::character varying, 'require_approval'::character varying]::text[]))", name: "check_agent_steps_policy_decision"
@@ -72,6 +74,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
     t.index ["action_digest"], name: "index_approvals_on_action_digest"
     t.index ["action_fingerprint"], name: "index_approvals_on_action_fingerprint"
     t.index ["agent_step_id"], name: "index_approvals_on_agent_step_id"
+    t.index ["created_at"], name: "index_approvals_on_created_at"
     t.index ["execution_id"], name: "index_approvals_on_execution_id"
     t.index ["expires_at"], name: "index_approvals_on_expires_at"
     t.index ["reviewer_id"], name: "index_approvals_on_reviewer_id"
@@ -142,10 +145,65 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
     t.integer "retry_count", default: 0, null: false
     t.index ["agent_id"], name: "index_executions_on_agent_id"
     t.index ["ai_model"], name: "index_executions_on_ai_model"
+    t.index ["created_at"], name: "index_executions_on_created_at"
     t.index ["provider"], name: "index_executions_on_provider"
     t.index ["status"], name: "index_executions_on_status"
     t.index ["task_id"], name: "index_executions_on_task_id"
     t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'planning'::character varying, 'planned'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'paused'::character varying, 'blocked'::character varying]::text[])", name: "check_executions_status"
+  end
+
+  create_table "mcp_servers", force: :cascade do |t|
+    t.bigint "user_id"
+    t.string "name", null: false
+    t.string "server_identifier", null: false
+    t.text "description"
+    t.string "transport_type", default: "stdio", null: false
+    t.string "command"
+    t.jsonb "arguments", default: [], null: false
+    t.string "endpoint_url"
+    t.text "environment_variables"
+    t.text "authentication_configuration"
+    t.integer "connection_timeout", default: 15, null: false
+    t.integer "request_timeout", default: 30, null: false
+    t.boolean "enabled", default: false, null: false
+    t.string "status", default: "disconnected", null: false
+    t.text "error_message"
+    t.string "protocol_version", default: "2024-11-05"
+    t.jsonb "server_info", default: {}, null: false
+    t.jsonb "capabilities", default: {}, null: false
+    t.integer "configuration_version", default: 1, null: false
+    t.boolean "allow_local_connections", default: false, null: false
+    t.datetime "last_connected_at"
+    t.datetime "last_health_check_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["enabled"], name: "index_mcp_servers_on_enabled"
+    t.index ["server_identifier"], name: "index_mcp_servers_on_server_identifier", unique: true
+    t.index ["status"], name: "index_mcp_servers_on_status"
+    t.index ["transport_type"], name: "index_mcp_servers_on_transport_type"
+    t.index ["user_id"], name: "index_mcp_servers_on_user_id"
+  end
+
+  create_table "mcp_tools", force: :cascade do |t|
+    t.bigint "mcp_server_id", null: false
+    t.string "external_tool_name", null: false
+    t.string "namespaced_tool_key", null: false
+    t.text "description"
+    t.jsonb "input_schema", default: {}, null: false
+    t.string "schema_hash", null: false
+    t.boolean "enabled", default: false, null: false
+    t.string "risk_classification", default: "medium", null: false
+    t.string "policy_decision", default: "deny", null: false
+    t.datetime "last_discovered_at"
+    t.datetime "last_invoked_at"
+    t.integer "invocation_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["enabled"], name: "index_mcp_tools_on_enabled"
+    t.index ["mcp_server_id", "external_tool_name"], name: "index_mcp_tools_on_mcp_server_id_and_external_tool_name", unique: true
+    t.index ["mcp_server_id"], name: "index_mcp_tools_on_mcp_server_id"
+    t.index ["namespaced_tool_key"], name: "index_mcp_tools_on_namespaced_tool_key", unique: true
+    t.index ["policy_decision"], name: "index_mcp_tools_on_policy_decision"
   end
 
   create_table "policies", force: :cascade do |t|
@@ -177,6 +235,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["agent_id"], name: "index_tasks_on_agent_id"
+    t.index ["created_at"], name: "index_tasks_on_created_at"
     t.index ["status"], name: "index_tasks_on_status"
     t.index ["submitted_at"], name: "index_tasks_on_submitted_at"
     t.index ["user_id"], name: "index_tasks_on_user_id"
@@ -232,6 +291,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_014802) do
   add_foreign_key "audit_events", "users", on_delete: :nullify
   add_foreign_key "executions", "agents", on_delete: :cascade
   add_foreign_key "executions", "tasks", on_delete: :cascade
+  add_foreign_key "mcp_servers", "users", on_delete: :cascade
+  add_foreign_key "mcp_tools", "mcp_servers", on_delete: :cascade
   add_foreign_key "policies", "users", on_delete: :nullify
   add_foreign_key "tasks", "agents", on_delete: :cascade
   add_foreign_key "tasks", "users", on_delete: :cascade

@@ -1,0 +1,78 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vaisastram
+      POSTGRES_PASSWORD: vaisastram_secure_dev_password
+      POSTGRES_DB: vaisastram_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaisastram -d vaisastram_production"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgres://vaisastram:vaisastram_secure_dev_password@db:5432/vaisastram_production
+      POSTGRES_DB: vaisastram_production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-94f1c9c7f68c3e80a0684f1816f1b3497e8838a1ec56d9be7e60b29ce37599723ca6e60b72fa998a6bb52bcf018698ba29aa0ebc5cfae605d3b61bf52c349cb5}
+      RAILS_FORCE_SSL: "false"
+      RAILS_ASSUME_SSL: "false"
+      RAILS_SERVE_STATIC_FILES: "true"
+      AI_PROVIDER_MODE: ${AI_PROVIDER_MODE:-cloud}
+      AI_PRIMARY_PROVIDER: ${AI_PRIMARY_PROVIDER:-openai}
+      AI_FALLBACK_PROVIDER: ${AI_FALLBACK_PROVIDER:-grok}
+      AI_FALLBACK_ENABLED: ${AI_FALLBACK_ENABLED:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      OPENAI_ENABLED: ${OPENAI_ENABLED:-true}
+      XAI_API_KEY: ${XAI_API_KEY:-}
+      XAI_MODEL: ${XAI_MODEL:-grok-2-latest}
+      XAI_ENABLED: ${XAI_ENABLED:-true}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma3:4b}
+    ports:
+      - "3000:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["./bin/rails", "solid_queue:start"]
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgres://vaisastram:vaisastram_secure_dev_password@db:5432/vaisastram_production
+      POSTGRES_DB: vaisastram_production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-94f1c9c7f68c3e80a0684f1816f1b3497e8838a1ec56d9be7e60b29ce37599723ca6e60b72fa998a6bb52bcf018698ba29aa0ebc5cfae605d3b61bf52c349cb5}
+      AI_PROVIDER_MODE: ${AI_PROVIDER_MODE:-cloud}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+
+volumes:
+  postgres_data:

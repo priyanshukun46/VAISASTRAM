@@ -1,0 +1,161 @@
+<div class="space-y-6">
+  <!-- Top Stat Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Total Evaluations</span>
+      <div class="mt-2 text-3xl font-black font-sans text-[#0d0726]"><%= @policy_analytics[:total_evaluations] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Evaluated independently by Ruby</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700">ALLOW Decisions</span>
+        <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+          <%= @policy_analytics[:distribution][:allow_pct] %>%
+        </span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-emerald-600"><%= @policy_analytics[:allow_count] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Autonomous execution authorized</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700">REQUIRE APPROVAL</span>
+        <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+          <%= @policy_analytics[:distribution][:require_approval_pct] %>%
+        </span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-amber-600"><%= @policy_analytics[:require_approval_count] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Held for human verification</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-700">DENY Decisions</span>
+        <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">
+          <%= @policy_analytics[:distribution][:deny_pct] %>%
+        </span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-rose-600"><%= @policy_analytics[:deny_count] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Blocked by fail-closed rules</div>
+    </div>
+  </div>
+
+  <!-- Decision Distribution Visual Bar -->
+  <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs space-y-2">
+    <div class="flex items-center justify-between text-xs font-mono font-bold text-slate-700">
+      <span>Decision Distribution Ratio</span>
+      <span><%= @policy_analytics[:total_evaluations] %> Evaluated Actions</span>
+    </div>
+    <div class="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex">
+      <div style="width: <%= @policy_analytics[:distribution][:allow_pct] %>%;" class="bg-emerald-500 h-full" title="ALLOW <%= @policy_analytics[:distribution][:allow_pct] %>%"></div>
+      <div style="width: <%= @policy_analytics[:distribution][:require_approval_pct] %>%;" class="bg-amber-400 h-full" title="REQUIRE APPROVAL <%= @policy_analytics[:distribution][:require_approval_pct] %>%"></div>
+      <div style="width: <%= @policy_analytics[:distribution][:deny_pct] %>%;" class="bg-rose-500 h-full" title="DENY <%= @policy_analytics[:distribution][:deny_pct] %>%"></div>
+    </div>
+    <div class="flex items-center space-x-6 text-[11px] font-mono text-slate-600 pt-1">
+      <div class="flex items-center space-x-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500"></span><span>ALLOW (<%= @policy_analytics[:distribution][:allow_pct] %>%)</span></div>
+      <div class="flex items-center space-x-1.5"><span class="h-2 w-2 rounded-full bg-amber-400"></span><span>REQUIRE APPROVAL (<%= @policy_analytics[:distribution][:require_approval_pct] %>%)</span></div>
+      <div class="flex items-center space-x-1.5"><span class="h-2 w-2 rounded-full bg-rose-500"></span><span>DENY (<%= @policy_analytics[:distribution][:deny_pct] %>%)</span></div>
+    </div>
+  </div>
+
+  <!-- Drill-Down Grids: Top Tools & Reasons -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Top Denied Tools -->
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs p-5">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726] flex items-center space-x-2">
+        <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+        <span>Most Frequently Denied Tools</span>
+      </h3>
+      <p class="text-[11px] font-mono text-slate-500 mt-1">Actions blocked by independent Ruby policy enforcement.</p>
+
+      <% if @policy_analytics[:top_denied_tools].any? %>
+        <div class="mt-4 space-y-2">
+          <% @policy_analytics[:top_denied_tools].each do |tool, count| %>
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-rose-50/50 border border-rose-100 text-xs font-mono">
+              <span class="font-bold text-rose-900"><%= tool %></span>
+              <span class="px-2 py-0.5 rounded bg-rose-200 text-rose-900 font-bold"><%= count %> blocked</span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mt-4 p-6 text-center text-xs font-mono text-slate-400 bg-slate-50 rounded-xl">
+          Zero denied tools recorded in this time window.
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Top Approval-Required Tools -->
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs p-5">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726] flex items-center space-x-2">
+        <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+        <span>Most Frequently Approval-Required Tools</span>
+      </h3>
+      <p class="text-[11px] font-mono text-slate-500 mt-1">Sensitive operations held for human oversight.</p>
+
+      <% if @policy_analytics[:top_approval_required_tools].any? %>
+        <div class="mt-4 space-y-2">
+          <% @policy_analytics[:top_approval_required_tools].each do |tool, count| %>
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-amber-50/50 border border-amber-100 text-xs font-mono">
+              <span class="font-bold text-amber-900"><%= tool %></span>
+              <span class="px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-bold"><%= count %> approval required</span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mt-4 p-6 text-center text-xs font-mono text-slate-400 bg-slate-50 rounded-xl">
+          Zero approval-required tools recorded in this time window.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Reasons & Policy Rules Attribution -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Denial Reasons -->
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs p-5">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Primary Denial Explanations</h3>
+      <p class="text-[11px] font-mono text-slate-500 mt-1">Extracted from policy evaluation records and audit metadata.</p>
+
+      <% if @policy_analytics[:denial_reasons].any? %>
+        <div class="mt-4 divide-y divide-slate-100">
+          <% @policy_analytics[:denial_reasons].each do |reason, count| %>
+            <div class="py-2.5 flex items-center justify-between text-xs font-mono">
+              <span class="text-slate-800 pr-3 truncate" title="<%= reason %>"><%= reason %></span>
+              <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold shrink-0"><%= count %></span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mt-4 p-6 text-center text-xs font-mono text-slate-400 bg-slate-50 rounded-xl">
+          No denial explanations in current window.
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Policy Rules Responsible -->
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs p-5">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Policy Rules Attribution</h3>
+      <p class="text-[11px] font-mono text-slate-500 mt-1">Active rules evaluated by Policies::Engine.</p>
+
+      <% if @policy_analytics[:rules_attribution].any? %>
+        <div class="mt-4 space-y-2">
+          <% @policy_analytics[:rules_attribution].each do |rule_id, counts| %>
+            <div class="p-3 rounded-lg border border-slate-200 bg-slate-50 text-xs font-mono">
+              <div class="font-bold text-[#0d0726]"><%= rule_id %></div>
+              <div class="flex items-center space-x-3 text-[11px] text-slate-600 mt-1">
+                <span>Allow: <strong class="text-emerald-700"><%= counts['allow'] %></strong></span>
+                <span>Approval: <strong class="text-amber-700"><%= counts['require_approval'] %></strong></span>
+                <span>Deny: <strong class="text-rose-700"><%= counts['deny'] %></strong></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mt-4 p-6 text-center text-xs font-mono text-slate-400 bg-slate-50 rounded-xl">
+          No rule attribution records in current window.
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

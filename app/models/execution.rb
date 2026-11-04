@@ -1,11 +1,12 @@
 class Execution < ApplicationRecord
   STATUSES = %w[pending planning planned running completed failed paused blocked].freeze
-  PROVIDERS = %w[ollama gemini groq].freeze
+  PROVIDERS = %w[ollama gemini groq openai grok xai].freeze
 
   belongs_to :task
   belongs_to :agent
   has_one :user, through: :task
   has_many :agent_steps, -> { order(position: :asc) }, dependent: :destroy
+  has_many :approvals, dependent: :nullify
   has_many :audit_events, dependent: :nullify
 
   alias_attribute :provider_name, :provider

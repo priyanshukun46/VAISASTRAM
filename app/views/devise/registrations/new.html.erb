@@ -56,10 +56,6 @@
           <%= f.email_field :email, autocomplete: "email", placeholder: "Email", class: "w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:border-[#7c5cfc] focus:ring-2 focus:ring-[#7c5cfc]/20 focus:outline-none transition shadow-2xs" %>
         </div>
 
-        <div>
-          <%= f.label :role, "Operational Role", class: "block text-xs font-mono uppercase text-slate-700 tracking-wider mb-1.5" %>
-          <%= f.select :role, options_for_select([["Autonomous Agent Operator", "operator"], ["Security & Governance Auditor", "auditor"], ["Platform Administrator", "admin"]], resource.role || "operator"), {}, class: "w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:border-[#7c5cfc] focus:ring-2 focus:ring-[#7c5cfc]/20 focus:outline-none transition shadow-2xs" %>
-        </div>
 
         <div>
           <%= f.label :password, "Password", class: "block text-xs font-mono uppercase text-slate-700 tracking-wider mb-1.5" %>

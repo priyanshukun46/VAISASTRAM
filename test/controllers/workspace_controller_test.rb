@@ -427,4 +427,88 @@ class WorkspaceControllerTest < ActionDispatch::IntegrationTest
     assert active_exec.conversation?
     refute active_exec.requires_action?
   end
+
+  test "cannot run a task on another user's agent" do
+    sign_in @user # operator one
+    foreign_agent = agents(:admin_agent) # belongs to the admin
+
+    plan = { "response" => "ok", "requires_action" => false, "steps" => [] }
+    resp = Ai::Response.new(raw_content: plan.to_json, data: plan, provider: "gemini", model: "gemini-2.5-pro", duration_ms: 1.0)
+    router = Object.new
+    router.define_singleton_method(:generate) { |*args, **kwargs| resp }
+
+    begin
+      Planning::AgentPlanner.default_router_override = router
+      post workspace_url, params: { instruction: "Explain how you work", agent_id: foreign_agent.id }
+    ensure
+      Planning::AgentPlanner.default_router_override = nil
+    end
+
+    task = @user.tasks.order(:created_at).last
+    assert_not_nil task
+    assert_equal @user.id, task.agent.user_id
+    assert_not_equal foreign_agent.id, task.agent_id
+  end
+
+  test "workspace renders the AI model dropdown" do
+    sign_in @user
+    get workspace_url
+    assert_response :success
+    assert_select "select#ai-model-select option[value=auto]"
+    assert_select "select#ai-model-select option[value=ollama]"
+    assert_select "select#ai-model-select option[value=gemini]"
+    assert_select "select#ai-model-select option[value=groq]"
+  end
+
+  test "rejects an unknown AI model and creates no task" do
+    sign_in @user
+    assert_no_difference("Task.count") do
+      post workspace_url, params: { instruction: "Explain how you work", ai_model: "gpt-evil" }
+    end
+    assert_redirected_to workspace_url
+    assert_match(/Unknown AI model/, flash[:alert])
+  end
+
+  test "rejects a cloud model whose API key is not configured" do
+    sign_in @user
+    skip "GEMINI key present" if ENV["GEMINI_API_KEY"].present?
+    assert_no_difference("Task.count") do
+      post workspace_url, params: { instruction: "Explain how you work", ai_model: "gemini" }
+    end
+    assert_match(/not configured/, flash[:alert])
+  end
+
+  test "workspace renders inline reply form and handles conversation continuation" do
+    sign_in @user
+
+    mock_plan = {
+      "mode" => "conversation",
+      "response" => "Here is a song:\n\n**Verse 1**\nFirst line",
+      "goal" => nil,
+      "steps" => []
+    }
+    mock_response = Ai::Response.new(
+      raw_content: mock_plan.to_json,
+      data: mock_plan,
+      provider: "groq",
+      model: "llama-3.3-70b-versatile",
+      duration_ms: 100.0
+    )
+
+    router = Object.new
+    router.define_singleton_method(:generate) { |*args, **kwargs| mock_response }
+
+    begin
+      Planning::AgentPlanner.default_router_override = router
+      post workspace_url, params: { instruction: "Write a song for me" }
+    ensure
+      Planning::AgentPlanner.default_router_override = nil
+    end
+
+    follow_redirect!
+    assert_response :success
+    assert_select "strong", text: "Verse 1"
+    assert_select "input[name='parent_task_id']"
+    assert_select "button", text: /Reply/
+  end
 end

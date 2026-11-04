@@ -4,7 +4,7 @@
 
 VAISASTRAM implements a governed hybrid AI inference architecture:
 - **Local Primary**: Ollama running Google's `gemma3:4b` on `http://localhost:11434`.
-- **Cloud Fallback 1**: Google Gemini (`gemini-2.5-pro`).
+- **Cloud Fallback 1**: Google Gemini (`gemini-3.8-flash`).
 - **Cloud Fallback 2**: Groq (`llama-3.3-70b-versatile`).
 
 Core Principle: **AI proposes. Ruby decides.**
@@ -32,7 +32,7 @@ OLLAMA_KEEP_ALIVE=5m
 
 # Cloud Provider Keys & Models
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-pro
+GEMINI_MODEL=gemini-3.8-flash
 
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=llama-3.3-70b-versatile

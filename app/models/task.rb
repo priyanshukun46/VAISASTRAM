@@ -4,6 +4,7 @@ class Task < ApplicationRecord
   belongs_to :user
   belongs_to :agent
   has_many :executions, dependent: :destroy
+  has_many :approvals, dependent: :destroy
 
   before_validation :set_submitted_at, on: :create
 

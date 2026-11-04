@@ -1,0 +1,164 @@
+<div class="space-y-6">
+  <!-- Top Headline Metric Cards (Phase 1) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Executions Card -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">
+        <span>Executions</span>
+        <span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">Total: <%= @overview[:total_executions] %></span>
+      </div>
+      <div class="mt-3 flex items-baseline space-x-2">
+        <span class="text-3xl font-black font-sans text-[#0d0726]"><%= @overview[:successful_executions] %></span>
+        <span class="text-xs font-mono font-medium text-emerald-600">completed</span>
+      </div>
+      <div class="mt-2 text-xs font-mono text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
+        <span>Failed: <strong class="text-rose-600"><%= @overview[:failed_executions] %></strong></span>
+        <span>Running: <strong class="text-blue-600"><%= @overview[:running_executions] %></strong></span>
+      </div>
+    </div>
+
+    <!-- Approvals Card -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">
+        <span>Human Approvals</span>
+        <span class="px-1.5 py-0.5 rounded text-[10px] <%= @overview[:pending_approvals] > 0 ? 'bg-amber-100 text-amber-800 font-bold' : 'bg-slate-100 text-slate-700' %>">
+          <%= @overview[:pending_approvals] %> Pending
+        </span>
+      </div>
+      <div class="mt-3 flex items-baseline space-x-2">
+        <span class="text-3xl font-black font-sans text-emerald-600"><%= @overview[:approved_approvals] %></span>
+        <span class="text-xs font-mono font-medium text-slate-500">approved</span>
+      </div>
+      <div class="mt-2 text-xs font-mono text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
+        <span>Rejected: <strong class="text-rose-600"><%= @overview[:rejected_approvals] %></strong></span>
+        <span>Expired: <strong class="text-slate-600"><%= @overview[:expired_approvals] %></strong></span>
+      </div>
+    </div>
+
+    <!-- Policy Decisions Card -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">
+        <span>Ruby Decisions</span>
+        <span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">Total: <%= @overview[:total_policy_decisions] %></span>
+      </div>
+      <div class="mt-3 flex items-baseline space-x-2">
+        <span class="text-3xl font-black font-sans text-[#7c5cfc]"><%= @overview[:policy_allow_decisions] %></span>
+        <span class="text-xs font-mono font-medium text-slate-500">allow</span>
+      </div>
+      <div class="mt-2 text-xs font-mono text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
+        <span>Approval: <strong class="text-amber-600"><%= @overview[:policy_require_approval_decisions] %></strong></span>
+        <span>Deny: <strong class="text-rose-600"><%= @overview[:policy_deny_decisions] %></strong></span>
+      </div>
+    </div>
+
+    <!-- Tasks & Overall Rate Card -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">
+        <span>Tasks & Health</span>
+        <span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">Total: <%= @overview[:total_tasks] %></span>
+      </div>
+      <div class="mt-3 flex items-baseline space-x-2">
+        <span class="text-3xl font-black font-sans <%= @overview[:success_rate] && @overview[:success_rate] >= 90 ? 'text-emerald-600' : 'text-[#0d0726]' %>">
+          <%= @overview[:success_rate] ? "#{@overview[:success_rate]}%" : "Unavailable" %>
+        </span>
+        <span class="text-xs font-mono font-medium text-slate-500">success rate</span>
+      </div>
+      <div class="mt-2 text-xs font-mono text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2">
+        <span>Cancelled: <strong class="text-slate-600"><%= @overview[:cancelled_tasks] %></strong></span>
+        <span>Status: <strong class="text-emerald-600">Governed</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snapshot Tables: Recent Executions & Pending Approvals -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Recent Executions Snapshot -->
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-sm font-bold font-sans text-[#0d0726]">Recent Executions</span>
+          <span class="text-[10px] font-mono uppercase bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Latest 5</span>
+        </div>
+        <%= link_to "View Analytics →", governance_path(tab: "executions", range: @scope.range), class: "text-xs font-mono text-[#7c5cfc] hover:underline" %>
+      </div>
+
+      <% if @recent_executions.present? %>
+        <div class="divide-y divide-slate-100">
+          <% @recent_executions.each do |exec| %>
+            <div class="px-5 py-3 hover:bg-slate-50 flex items-center justify-between transition">
+              <div class="min-w-0 pr-4">
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs font-bold text-[#0d0726] truncate">
+                    <%= exec.task&.title || "Execution ##{exec.id}" %>
+                  </span>
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase <%= exec.completed? ? 'bg-emerald-100 text-emerald-800' : (exec.failed? ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800') %>">
+                    <%= exec.status %>
+                  </span>
+                </div>
+                <div class="text-[11px] font-mono text-slate-500 mt-0.5">
+                  <%= exec.provider %> · <%= exec.ai_model %> · <%= time_ago_in_words(exec.created_at) %> ago
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 shrink-0">
+                <%= link_to timeline_execution_path(exec), class: "text-xs font-mono px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700" do %>
+                  Timeline
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="p-8 text-center text-xs font-mono text-slate-400">
+          No executions recorded in this time window.
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Pending Approvals Snapshot -->
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-sm font-bold font-sans text-[#0d0726]">Pending Human Approvals</span>
+          <span class="text-[10px] font-mono uppercase bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">
+            <%= @overview[:pending_approvals] %> Active
+          </span>
+        </div>
+        <%= link_to "Approval Center →", approvals_path, class: "text-xs font-mono text-[#7c5cfc] hover:underline" %>
+      </div>
+
+      <% if @pending_approvals.present? %>
+        <div class="divide-y divide-slate-100">
+          <% @pending_approvals.each do |appr| %>
+            <div class="px-5 py-3 hover:bg-slate-50 flex items-center justify-between transition">
+              <div class="min-w-0 pr-4">
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs font-bold text-[#0d0726] font-mono">
+                    <%= appr.effective_tool_name %>
+                  </span>
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase bg-amber-100 text-amber-800 font-bold">
+                    Awaiting Review
+                  </span>
+                </div>
+                <div class="text-[11px] font-mono text-slate-500 mt-0.5">
+                  Requested <%= time_ago_in_words(appr.requested_at || appr.created_at) %> ago
+                  <% if appr.expires_at %>
+                    · Expires in <%= time_ago_in_words(appr.expires_at) %>
+                  <% end %>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 shrink-0">
+                <%= link_to approval_path(appr), class: "text-xs font-mono px-2.5 py-1 rounded bg-[#0d0726] hover:bg-black text-white font-bold" do %>
+                  Review
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="p-8 text-center text-xs font-mono text-slate-400">
+          Zero pending approvals. All actions authorized or completed.
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

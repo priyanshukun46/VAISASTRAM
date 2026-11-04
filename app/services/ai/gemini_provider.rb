@@ -1,6 +1,6 @@
 module Ai
   class GeminiProvider < BaseProvider
-    DEFAULT_MODEL = "gemini-2.5-pro".freeze
+    DEFAULT_MODEL = "gemini-3.8-flash".freeze
     BASE_API_URL = "https://generativelanguage.googleapis.com/v1beta/models".freeze
 
     def provider_name

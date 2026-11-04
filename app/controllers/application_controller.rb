@@ -26,7 +26,10 @@ class ApplicationController < ActionController::Base
   protected
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: %i[name role])
-    devise_parameter_sanitizer.permit(:account_update, keys: %i[name role])
+    # SECURITY: `role` must never be client-assignable (privilege escalation).
+    # New users get the DB default ("operator"); admins/auditors are provisioned
+    # server-side (seeds / console / a future admin-only UI).
+    devise_parameter_sanitizer.permit(:sign_up, keys: %i[name])
+    devise_parameter_sanitizer.permit(:account_update, keys: %i[name])
   end
 end

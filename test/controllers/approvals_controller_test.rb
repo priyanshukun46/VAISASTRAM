@@ -110,4 +110,15 @@ class ApprovalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
     assert_includes response.body, %(target="approval_card_#{@approval.id}")
   end
+
+  test "JSON view exposes only safe fields" do
+    sign_in @admin
+    get approval_url(@approval, format: :json)
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal @approval.id, body["id"]
+    assert_not body.key?("action_arguments")
+    assert_not body.key?("action_digest")
+  end
 end

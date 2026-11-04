@@ -67,6 +67,7 @@
             <% if user_signed_in? %>
               <nav class="hidden md:flex items-center space-x-1">
                 <%= nav_link_to "Dashboard", dashboard_path %>
+                <%= nav_link_to "Governance", governance_path %>
                 <%= nav_link_to "Agent Workspace", workspace_path %>
                 <%= nav_link_to "Approval Center", approvals_path %>
                 <%= nav_link_to "Policy Center", policies_path %>

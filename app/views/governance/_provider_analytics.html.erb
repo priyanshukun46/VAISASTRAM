@@ -1,0 +1,155 @@
+<div class="space-y-6">
+  <!-- Top Stat Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Total Inferences</span>
+      <div class="mt-2 text-3xl font-black font-sans text-[#0d0726]"><%= @provider_analytics[:total_requests] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">
+        <%= @provider_analytics[:successful_requests] %> successful, <%= @provider_analytics[:failed_requests] %> failed
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-700">Average Latency</span>
+        <span class="text-xs font-mono text-slate-500">End-to-end</span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-indigo-600"><%= @provider_analytics[:formatted_avg_latency] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Across local & cloud inference</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700">Fallback Rate</span>
+        <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded <%= @provider_analytics[:fallback_count] > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700' %>">
+          <%= @provider_analytics[:fallback_rate] ? "#{@provider_analytics[:fallback_rate]}%" : "0%" %>
+        </span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-amber-600"><%= @provider_analytics[:fallback_count] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Inferences routed to fallback provider</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700">Primary Inference Mode</span>
+      <div class="mt-2 text-2xl font-black font-sans text-emerald-700">
+        <%= Rails.env.production? ? "Cloud Hybrid" : "Local First" %>
+      </div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Zero raw credential leakage</div>
+    </div>
+  </div>
+
+  <!-- Provider Health Status Grid -->
+  <div class="p-6 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+      <div>
+        <h3 class="text-base font-bold font-sans text-[#0d0726]">Provider Health & Operational Status</h3>
+        <p class="text-xs font-mono text-slate-500">Real-time status based on recent inference attempts and fallback triggers</p>
+      </div>
+      <span class="text-xs font-mono text-slate-400">Strictly sanitized telemetry</span>
+    </div>
+
+    <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <% @provider_analytics[:provider_statuses].each do |provider, info| %>
+        <div class="p-4 rounded-xl border <%= info[:health] == 'Healthy' ? 'bg-emerald-50/40 border-emerald-200' : info[:health] == 'Degraded' ? 'bg-rose-50/40 border-rose-200' : 'bg-slate-50 border-slate-200' %>">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-bold font-mono text-slate-800 capitalize"><%= provider %></span>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded <%= info[:health] == 'Healthy' ? 'bg-emerald-100 text-emerald-800' : info[:health] == 'Degraded' ? 'bg-rose-100 text-rose-800' : 'bg-slate-200 text-slate-700' %>">
+              <%= info[:health] %>
+            </span>
+          </div>
+          <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-mono">
+            <div class="bg-white/80 p-1.5 rounded border border-slate-200">
+              <span class="text-[10px] text-slate-500 block">Calls</span>
+              <span class="font-bold text-slate-800"><%= info[:total] %></span>
+            </div>
+            <div class="bg-white/80 p-1.5 rounded border border-slate-200">
+              <span class="text-[10px] text-slate-500 block">Failures</span>
+              <span class="font-bold text-rose-600"><%= info[:failed] %></span>
+            </div>
+            <div class="bg-white/80 p-1.5 rounded border border-slate-200">
+              <span class="text-[10px] text-slate-500 block">Fallbacks</span>
+              <span class="font-bold text-amber-600"><%= info[:fallbacks] %></span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Usage & Latency Breakdown -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Provider Usage Distribution -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Provider Usage</h3>
+      <p class="text-xs font-mono text-slate-500">Distribution by backend provider</p>
+      <div class="mt-4 space-y-2">
+        <% if @provider_analytics[:provider_usage].any? %>
+          <% @provider_analytics[:provider_usage].each do |prov, count| %>
+            <div class="flex items-center justify-between text-xs font-mono py-1.5 border-b border-slate-100 last:border-0">
+              <span class="font-bold text-slate-800 capitalize"><%= prov %></span>
+              <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold"><%= count %> requests</span>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="py-6 text-center text-xs font-mono text-slate-400">No inference requests logged</div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Model Usage Distribution -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Model Usage</h3>
+      <p class="text-xs font-mono text-slate-500">Distribution by AI model identifier</p>
+      <div class="mt-4 space-y-2">
+        <% if @provider_analytics[:model_usage].any? %>
+          <% @provider_analytics[:model_usage].each do |model, count| %>
+            <div class="flex items-center justify-between text-xs font-mono py-1.5 border-b border-slate-100 last:border-0">
+              <span class="font-bold text-slate-800 truncate max-w-[150px]" title="<%= model %>"><%= model %></span>
+              <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold"><%= count %> calls</span>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="py-6 text-center text-xs font-mono text-slate-400">No model usage recorded</div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Latency By Provider -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Latency by Provider</h3>
+      <p class="text-xs font-mono text-slate-500">Average response duration</p>
+      <div class="mt-4 space-y-2">
+        <% if @provider_analytics[:latency_by_provider].any? %>
+          <% @provider_analytics[:latency_by_provider].each do |prov, lat| %>
+            <div class="flex items-center justify-between text-xs font-mono py-1.5 border-b border-slate-100 last:border-0">
+              <span class="font-bold text-slate-800 capitalize"><%= prov %></span>
+              <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">
+                <%= lat < 1000 ? "#{lat.round(0)}ms" : "#{(lat / 1000.0).round(2)}s" %>
+              </span>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="py-6 text-center text-xs font-mono text-slate-400">No latency measurements available</div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provider Error Categories -->
+  <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+    <h3 class="text-sm font-bold font-sans text-[#0d0726]">Provider Error Classification</h3>
+    <p class="text-xs font-mono text-slate-500">Categorized AI error codes and timeout diagnostics</p>
+    <div class="mt-4 space-y-2">
+      <% if @provider_analytics[:error_categories].any? %>
+        <% @provider_analytics[:error_categories].each do |cat, count| %>
+          <div class="flex items-center justify-between text-xs font-mono py-2 border-b border-slate-100 last:border-0">
+            <span class="font-bold text-rose-800"><%= cat %></span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold"><%= count %> occurrences</span>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="py-4 text-center text-xs font-mono text-slate-400">Zero provider errors recorded in this time window</div>
+      <% end %>
+    </div>
+  </div>
+</div>

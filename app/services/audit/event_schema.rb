@@ -31,9 +31,18 @@ module Audit
       ai_provider_selected ai_provider_failed ai_provider_fallback_used
     ].freeze
 
+    MCP_EVENTS = %w[
+      mcp_server_created mcp_server_connected mcp_server_connection_failed
+      mcp_server_disconnected mcp_tools_discovered mcp_tool_enabled
+      mcp_tool_disabled mcp_tool_invocation_requested mcp_tool_policy_evaluated
+      mcp_tool_approval_requested mcp_tool_invocation_succeeded
+      mcp_tool_invocation_failed mcp_server_configuration_changed
+      mcp_server_removed
+    ].freeze
+
     ALL_EVENT_TYPES = (
       TASK_EVENTS + PLANNING_EVENTS + POLICY_EVENTS +
-      TOOL_EVENTS + APPROVAL_EVENTS + PROVIDER_EVENTS
+      TOOL_EVENTS + APPROVAL_EVENTS + PROVIDER_EVENTS + MCP_EVENTS
     ).uniq.freeze
 
     ACTOR_TYPES = %w[user agent policy_engine system].freeze

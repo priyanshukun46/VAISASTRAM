@@ -6,17 +6,18 @@ module Planning
       attr_accessor :default_router_override
     end
 
-    attr_reader :task, :user, :agent, :provider_router
+    attr_reader :task, :user, :agent, :provider_router, :context_task
 
-    def initialize(task:, user:, provider_router: nil)
+    def initialize(task:, user:, provider_router: nil, context_task: nil)
       @task = task
       @user = user
       @agent = task.agent
       @provider_router = provider_router || self.class.default_router_override || Ai::ProviderRouter.new
+      @context_task = context_task
     end
 
-    def self.plan(task:, user:, provider_router: nil)
-      new(task: task, user: user, provider_router: provider_router).plan
+    def self.plan(task:, user:, provider_router: nil, context_task: nil)
+      new(task: task, user: user, provider_router: provider_router, context_task: context_task).plan
     end
 
     def plan
@@ -47,7 +48,7 @@ module Planning
 
         # 4. Construct Structured Planning Prompts
         system_prompt = PlanningPrompt.build_system_prompt(agent: @agent, tools: tools)
-        user_prompt = PlanningPrompt.build_user_prompt(task: @task)
+        user_prompt = PlanningPrompt.build_user_prompt(task: @task, context_task: @context_task)
         schema = PlanSchema.json_schema(available_tools: allowed_keys)
 
         # 5. Invoke Multi-Provider AI Routing (Gemini -> Groq fallback)

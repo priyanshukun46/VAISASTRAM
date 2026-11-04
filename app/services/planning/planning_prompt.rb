@@ -36,10 +36,11 @@ module Planning
         1. "conversation":
            Use this mode when the operator is asking a general question, greeting, brainstorming, discussing technical subjects, or inquiring:
            - Identity inquiries (e.g. "who are you", "what can you do", "introduce yourself"). Introduce yourself as VAISASTRAM.
-           - General questions, concepts, science, history, coding, or architecture (e.g. "explain how quantum computing works", "how does Raft consensus work", "brainstorm features for a microservice platform").
+           - General questions, concepts, science, history, coding, creative requests, or architecture (e.g. "explain how quantum computing works", "write a song", "how does Raft consensus work", "brainstorm features for a microservice platform").
            - Explaining VAISASTRAM's philosophy, policies, and governance architecture.
            - Greetings and casual conversation (e.g. "hello", "hi", "good morning").
            - Requests for actions where no registered tool exists (explain that no tool is registered).
+           - Always format conversational responses using clean, readable Markdown (paragraphs, stanzas, bullet points, bold headers, and code blocks where helpful).
            Format for conversation mode:
            {
              "mode": "conversation",
@@ -88,19 +89,31 @@ module Planning
       PROMPT
     end
 
-    def self.build_user_prompt(task:)
+    def self.build_user_prompt(task:, context_task: nil)
       classified_intent = IntentClassifier.classify(task.instruction)
 
+      context_section = if context_task.present?
+        prev_exec = context_task.executions.order(created_at: :desc).first
+        if prev_exec&.ai_response_text.present?
+          <<~CTX
+            PRIOR CONVERSATION CONTEXT:
+            User: "#{context_task.instruction.to_s.truncate(300)}"
+            Assistant: "#{prev_exec.ai_response_text.to_s.truncate(600)}"
+
+          CTX
+        end
+      end
+
       <<~PROMPT
-        USER INSTRUCTION:
+        #{context_section}USER INSTRUCTION:
         "#{task.instruction}"
 
         CLASSIFIED INTENT HINT: #{classified_intent}
 
         MANDATORY JSON OUTPUT INSTRUCTION:
         Your response MUST be valid JSON containing the "mode" field as the primary key.
-        - If asking a general question, greeting, technical explanation, brainstorming, or conversational query (e.g. "who are you", "hello", "explain quantum computing", "how does Raft work", "brainstorm architecture ideas"):
-          Return "mode": "conversation" with your conversational answer in "response", "goal": null, and "steps": []. Introduce yourself as VAISASTRAM when asked about identity. Do not invoke financial tools.
+        - If asking a general question, greeting, technical explanation, creative request, brainstorming, or conversational query (e.g. "who are you", "hello", "write a song", "explain quantum computing", "how does Raft work", "brainstorm architecture ideas"):
+          Return "mode": "conversation" with your conversational answer in "response" formatted in readable Markdown, "goal": null, and "steps": []. Introduce yourself as VAISASTRAM when asked about identity. Do not invoke financial tools.
         - If requesting an actionable task requiring registered tools (e.g. "Verify invoice INV-100", "Prepare payment of INR 5000"):
           Return "mode": "action_plan" with a concise "goal", prospective "response", and sequential "steps".
         - If the request requires tools that are NOT in the allowlisted tools list, do NOT invent tools. Return "mode": "conversation" and explain that no tool is registered for that action.

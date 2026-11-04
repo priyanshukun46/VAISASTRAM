@@ -56,7 +56,8 @@ module Audit
       AuditEvent.transaction do
         # Acquire transaction-scoped advisory lock for this chain_id to serialize sequential entries
         lock_key = (Zlib.crc32(chain_id) & 0x7FFFFFFF)
-        ActiveRecord::Base.connection.execute("SELECT pg_advisory_xact_lock(#{lock_key})")
+        sanitized_sql = ActiveRecord::Base.sanitize_sql_array(["SELECT pg_advisory_xact_lock(?)", lock_key])
+        ActiveRecord::Base.connection.execute(sanitized_sql)
 
         last_event = AuditEvent.where(chain_id: chain_id).order(sequence_number: :desc).first
         sequence_number = last_event ? last_event.sequence_number.to_i + 1 : 1

@@ -1,0 +1,107 @@
+<div class="space-y-6">
+  <!-- Top Stat Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700">Pending Review</span>
+      <div class="mt-2 text-3xl font-black font-sans text-amber-600"><%= @approval_analytics[:pending_count] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Currently awaiting human action</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700">Approved</span>
+      <div class="mt-2 text-3xl font-black font-sans text-emerald-600"><%= @approval_analytics[:approved_count] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">
+        <%= @approval_analytics[:distribution][:approved_pct] %>% of decided requests
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-700">Rejected</span>
+      <div class="mt-2 text-3xl font-black font-sans text-rose-600"><%= @approval_analytics[:rejected_count] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">
+        <%= @approval_analytics[:distribution][:rejected_pct] %>% of decided requests
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Avg Waiting Time</span>
+      <div class="mt-2 text-3xl font-black font-sans text-[#7c5cfc]">
+        <%= @approval_analytics[:formatted_avg_waiting_time] %>
+      </div>
+      <div class="mt-1 text-xs font-mono text-slate-500">From request to operator decision</div>
+    </div>
+  </div>
+
+  <!-- Stale / Expiring Approvals Alert (if any) -->
+  <% if @approval_analytics[:stale_approvals].any? %>
+    <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200 shadow-2xs">
+      <div class="flex items-center space-x-2 text-amber-900 font-bold font-sans text-sm">
+        <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span>Expiring Approvals Alert</span>
+      </div>
+      <p class="text-xs font-mono text-amber-800 mt-1">
+        The following pending requests will expire soon. Unreviewed requests expire automatically to prevent stale authorization attacks.
+      </p>
+      <div class="mt-3 divide-y divide-amber-200/60">
+        <% @approval_analytics[:stale_approvals].each do |appr| %>
+          <div class="py-2 flex items-center justify-between text-xs font-mono">
+            <span class="font-bold text-amber-950"><%= appr.effective_tool_name %> (Approval #<%= appr.id %>)</span>
+            <span class="text-amber-800">Expires in <%= time_ago_in_words(appr.expires_at) %></span>
+            <%= link_to "Review Now", approval_path(appr), class: "px-2 py-0.5 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Drill-Down: Top Approved and Rejected Action Types -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs p-5">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726] flex items-center space-x-2">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+        <span>Most Frequently Approved Action Types</span>
+      </h3>
+      <p class="text-[11px] font-mono text-slate-500 mt-1">Actions granted human authorization.</p>
+
+      <% if @approval_analytics[:top_approved_action_types].any? %>
+        <div class="mt-4 space-y-2">
+          <% @approval_analytics[:top_approved_action_types].each do |tool, count| %>
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50/50 border border-emerald-100 text-xs font-mono">
+              <span class="font-bold text-emerald-900"><%= tool %></span>
+              <span class="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold"><%= count %> approved</span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mt-4 p-6 text-center text-xs font-mono text-slate-400 bg-slate-50 rounded-xl">
+          Zero approved actions in current window.
+        </div>
+      <% end %>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xs p-5">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726] flex items-center space-x-2">
+        <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+        <span>Most Frequently Rejected Action Types</span>
+      </h3>
+      <p class="text-[11px] font-mono text-slate-500 mt-1">Actions denied by human reviewers.</p>
+
+      <% if @approval_analytics[:top_rejected_action_types].any? %>
+        <div class="mt-4 space-y-2">
+          <% @approval_analytics[:top_rejected_action_types].each do |tool, count| %>
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-rose-50/50 border border-rose-100 text-xs font-mono">
+              <span class="font-bold text-rose-900"><%= tool %></span>
+              <span class="px-2 py-0.5 rounded bg-rose-200 text-rose-900 font-bold"><%= count %> rejected</span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mt-4 p-6 text-center text-xs font-mono text-slate-400 bg-slate-50 rounded-xl">
+          Zero rejected actions in current window.
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

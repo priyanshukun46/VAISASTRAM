@@ -1,0 +1,173 @@
+<div class="space-y-6">
+  <!-- Execution Overview Stat Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Total Executions</span>
+      <div class="mt-2 text-3xl font-black font-sans text-[#0d0726]"><%= @execution_analytics[:total_executions] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">
+        <%= @execution_analytics[:completed_executions] %> completed, <%= @execution_analytics[:failed_executions] %> failed
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700">Success Rate</span>
+        <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded <%= @execution_analytics[:success_rate] && @execution_analytics[:success_rate] >= 80 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
+          <%= @execution_analytics[:success_rate] ? "#{@execution_analytics[:success_rate]}%" : "Unavailable" %>
+        </span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-emerald-600">
+        <%= @execution_analytics[:success_rate] ? "#{@execution_analytics[:success_rate]}%" : "—" %>
+      </div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Finished executions completed</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700">Average Duration</span>
+        <span class="text-xs font-mono text-slate-500">Median: <%= @execution_analytics[:formatted_median_duration] %></span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-[#0d0726]"><%= @execution_analytics[:formatted_avg_duration] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Start to completion latency</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-indigo-700">Tool Action Steps</span>
+        <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800">
+          <%= @execution_analytics[:tool_success_rate] ? "#{@execution_analytics[:tool_success_rate]}% Success" : "Unavailable" %>
+        </span>
+      </div>
+      <div class="mt-2 text-3xl font-black font-sans text-indigo-600"><%= @execution_analytics[:total_steps] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">
+        Avg <%= @execution_analytics[:avg_steps_per_execution] || "0" %> steps per execution
+      </div>
+    </div>
+  </div>
+
+  <!-- Failure Category Breakdown -->
+  <div class="p-6 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+      <div>
+        <h3 class="text-base font-bold font-sans text-[#0d0726]">Execution Failure Breakdown</h3>
+        <p class="text-xs font-mono text-slate-500">Distinct categorization isolating planning, governance, tool, and infra errors</p>
+      </div>
+      <span class="text-xs font-mono px-2 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200">
+        <%= @execution_analytics[:failed_executions] %> Total Failed Executions
+      </span>
+    </div>
+
+    <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <% breakdown = @execution_analytics[:failure_breakdown] %>
+      
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-slate-700">Planning Errors</span>
+          <span class="text-sm font-black font-mono <%= breakdown[:planning_failures] > 0 ? 'text-amber-600' : 'text-slate-400' %>">
+            <%= breakdown[:planning_failures] %>
+          </span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">LLM planner parse errors or unhandled prompts</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-slate-700">Schema Validation</span>
+          <span class="text-sm font-black font-mono <%= breakdown[:schema_validation_failures] > 0 ? 'text-amber-600' : 'text-slate-400' %>">
+            <%= breakdown[:schema_validation_failures] %>
+          </span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">Missing mode, syntax corruption, schema mismatch</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-slate-700">Policy Denials</span>
+          <span class="text-sm font-black font-mono <%= breakdown[:policy_denials] > 0 ? 'text-rose-600' : 'text-slate-400' %>">
+            <%= breakdown[:policy_denials] %>
+          </span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">Execution aborted by fail-closed policy engine</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-slate-700">Approval Rejections</span>
+          <span class="text-sm font-black font-mono <%= breakdown[:approval_rejections] > 0 ? 'text-rose-600' : 'text-slate-400' %>">
+            <%= breakdown[:approval_rejections] %>
+          </span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">Operator rejected human-in-the-loop request</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-slate-700">Tool Failures</span>
+          <span class="text-sm font-black font-mono <%= breakdown[:tool_execution_failures] > 0 ? 'text-rose-600' : 'text-slate-400' %>">
+            <%= breakdown[:tool_execution_failures] %>
+          </span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">Tool returned error code or runtime exception</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-slate-700">AI Provider Failures</span>
+          <span class="text-sm font-black font-mono <%= breakdown[:provider_failures] > 0 ? 'text-amber-600' : 'text-slate-400' %>">
+            <%= breakdown[:provider_failures] %>
+          </span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">Timeout, rate limit, or all providers failed</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 sm:col-span-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-slate-700">Infrastructure / Unknown</span>
+          <span class="text-sm font-black font-mono <%= breakdown[:infrastructure_failures] > 0 ? 'text-slate-700' : 'text-slate-400' %>">
+            <%= breakdown[:infrastructure_failures] %>
+          </span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">Worker shutdown, database or unexpected server errors</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool Usage & Failure Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Top Used Tools -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Most Invoked Tools</h3>
+      <p class="text-xs font-mono text-slate-500">Execution frequency across authorized actions</p>
+      <div class="mt-4 space-y-3">
+        <% if @execution_analytics[:top_used_tools].any? %>
+          <% @execution_analytics[:top_used_tools].each do |tool, count| %>
+            <div class="flex items-center justify-between text-xs font-mono py-1.5 border-b border-slate-100 last:border-0">
+              <span class="font-bold text-slate-800"><%= tool %></span>
+              <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold"><%= count %> calls</span>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="py-6 text-center text-xs font-mono text-slate-400">No tool actions recorded in this window</div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Top Failing Tools -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Tool Execution Failures</h3>
+      <p class="text-xs font-mono text-slate-500">Tools with runtime or validation errors</p>
+      <div class="mt-4 space-y-3">
+        <% if @execution_analytics[:top_failing_tools].any? %>
+          <% @execution_analytics[:top_failing_tools].each do |tool, count| %>
+            <div class="flex items-center justify-between text-xs font-mono py-1.5 border-b border-slate-100 last:border-0">
+              <span class="font-bold text-rose-800"><%= tool %></span>
+              <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold"><%= count %> failures</span>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="py-6 text-center text-xs font-mono text-slate-400">Zero tool execution failures in this window</div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

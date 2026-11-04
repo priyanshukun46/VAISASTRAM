@@ -78,8 +78,9 @@
                     <span>CLOUD FALLBACK — <%= @active_execution.provider.upcase %></span>
                   </span>
                 <% else %>
-                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300">
-                    <%= @active_execution.provider_badge_label %>
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center space-x-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                    <span><%= @active_execution.provider_badge_label %></span>
                   </span>
                 <% end %>
                 <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
@@ -120,9 +121,9 @@
             <% else %>
               <!-- Short, Human-Readable Response Text -->
               <% if @active_execution.ai_response_text.present? %>
-                <p class="text-sm text-slate-800 leading-relaxed font-normal">
-                  <%= @active_execution.ai_response_text %>
-                </p>
+                <div class="text-sm text-slate-800 leading-relaxed font-normal">
+                  <%= format_ai_response(@active_execution.ai_response_text) %>
+                </div>
               <% end %>
 
               <!-- Clarifying Questions Callout (if missing information) -->
@@ -164,6 +165,24 @@
               </div>
             <% end %>
           </div>
+        </div>
+
+        <!-- Inline Conversation Reply Form (Chat Thread Continuity) -->
+        <div class="pt-2 border-t border-dashed border-slate-200">
+          <%= form_with url: workspace_path, method: :post, local: true, class: "flex items-center space-x-2" do |f| %>
+            <%= f.hidden_field :ai_model, value: @selected_model %>
+            <%= f.hidden_field :agent_id, value: @selected_agent&.id %>
+            <%= f.hidden_field :parent_task_id, value: @active_task.id %>
+            <%= f.text_field :instruction,
+                  placeholder: "Reply to VAISASTRAM Agent (e.g. 'Can you add chords?', 'Make it shorter', 'Verify invoice INV-100')...",
+                  class: "flex-1 rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7c5cfc] focus:border-transparent shadow-2xs" %>
+            <%= f.button type: :submit, class: "h-10 px-4 rounded-xl bg-[#0d0726] hover:bg-black text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center space-x-1.5 transition shadow-xs hover:scale-102 active:scale-98 cursor-pointer shrink-0" do %>
+              <span>Reply</span>
+              <svg class="w-3.5 h-3.5 text-[#d4f90d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            <% end %>
+          <% end %>
         </div>
       </div>
 
@@ -337,9 +356,14 @@
 
           <!-- Right: Model selector & Action button -->
           <div class="flex items-center space-x-2">
-            <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-mono font-medium text-emerald-900" title="Primary: Local Gemma 3 4B | Fallback: Cloud Gemini/Groq">
+            <div class="flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-mono font-medium text-emerald-900" title="Choose which AI model plans this task">
               <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Gemma 3 4B (Hybrid)</span>
+              <%= f.label :ai_model, "AI model", class: "sr-only" %>
+              <%= f.select :ai_model,
+                    options_for_select(Ai::ModelCatalog.options_for_select, selected: @selected_model, disabled: Ai::ModelCatalog.disabled_ids),
+                    {},
+                    id: "ai-model-select",
+                    class: "bg-transparent border-0 py-0 pl-0 pr-6 text-xs font-mono font-medium text-emerald-900 focus:ring-0 focus:outline-none cursor-pointer" %>
             </div>
 
             <%= f.button type: :submit,

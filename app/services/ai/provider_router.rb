@@ -6,6 +6,23 @@ module Ai
     attr_reader :local_provider, :cloud_primary_provider, :cloud_fallback_provider,
                 :mode, :cloud_fallback_enabled, :attempts, :max_retries, :retry_delay
 
+    def self.resolve_provider(name)
+      case name.to_s.downcase
+      when "openai"
+        Ai::OpenaiProvider.new
+      when "grok", "xai"
+        Ai::XaiProvider.new
+      when "groq"
+        Ai::GroqProvider.new
+      when "gemini"
+        Ai::GeminiProvider.new
+      when "ollama"
+        Ai::OllamaProvider.new
+      else
+        Ai::GeminiProvider.new
+      end
+    end
+
     def initialize(
       local_provider: nil,
       cloud_primary_provider: nil,
@@ -17,9 +34,9 @@ module Ai
       max_retries: DEFAULT_MAX_RETRIES,
       retry_delay: DEFAULT_RETRY_DELAY
     )
-      @mode = (mode || ENV.fetch("AI_PROVIDER_MODE", "hybrid")).to_s.downcase
+      @mode = (mode || Ai::Configuration.mode).to_s.downcase
       @cloud_fallback_enabled = if cloud_fallback_enabled.nil?
-        ENV.fetch("AI_CLOUD_FALLBACK_ENABLED", "true").to_s.downcase == "true"
+        Ai::Configuration.fallback_enabled?
       else
         ActiveModel::Type::Boolean.new.cast(cloud_fallback_enabled)
       end
@@ -31,8 +48,13 @@ module Ai
         @cloud_fallback_provider = nil
       else
         @local_provider = local_provider || Ai::OllamaProvider.new
-        @cloud_primary_provider = cloud_primary_provider || primary_provider || Ai::GeminiProvider.new
-        @cloud_fallback_provider = cloud_fallback_provider || fallback_provider || Ai::GroqProvider.new
+        @cloud_primary_provider = cloud_primary_provider || primary_provider || self.class.resolve_provider(Ai::Configuration.primary_provider)
+        # Pass `cloud_fallback_provider: :none` to pin a single cloud provider with no silent fallback.
+        @cloud_fallback_provider = if cloud_fallback_provider == :none
+          nil
+        else
+          cloud_fallback_provider || fallback_provider || self.class.resolve_provider(Ai::Configuration.fallback_provider)
+        end
       end
 
       @max_retries = max_retries
@@ -99,8 +121,8 @@ module Ai
         Rails.logger.warn("[AI ProviderRouter] Cloud primary provider #{@cloud_primary_provider.provider_name} failed: #{err.message}.")
       end
 
-      # Tier 3: Cloud Fallback (Groq)
-      if @cloud_fallback_provider.present?
+      # Tier 3: Cloud Fallback (Groq / secondary)
+      if @cloud_fallback_provider.present? && @cloud_fallback_enabled
         fallback_reason = "Prior providers failed. Last: #{last_error&.message}"
         response, err, _retries = execute_with_retries(
           @cloud_fallback_provider,

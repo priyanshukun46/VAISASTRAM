@@ -1,6 +1,7 @@
 class ApprovalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_approval, only: [:show, :approve, :reject]
+  before_action :authorize_view!, only: [:show]
 
   def index
     # Clean up stale approvals on page load for fresh UI state
@@ -41,7 +42,11 @@ class ApprovalsController < ApplicationController
   def show
     respond_to do |format|
       format.html
-      format.json { render json: @approval }
+      format.json do
+        render json: @approval.as_json(
+          only: %i[id status tool_name action_fingerprint requested_at expires_at reviewed_at rejection_reason]
+        )
+      end
     end
   end
 
@@ -131,5 +136,16 @@ class ApprovalsController < ApplicationController
 
   def set_approval
     @approval = Approval.find(params[:id])
+  end
+
+  # Viewing an approval requires an oversight role, ownership, or reviewer eligibility.
+  def authorize_view!
+    return if current_user.admin? || current_user.auditor? ||
+              current_user.can_access?(@approval) || current_user.can_approve?(@approval)
+
+    respond_to do |format|
+      format.html { redirect_to approvals_path, alert: "Access Denied: You are not authorized to view this approval." }
+      format.json { head :forbidden }
+    end
   end
 end

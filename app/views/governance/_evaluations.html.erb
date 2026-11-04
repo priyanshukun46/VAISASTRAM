@@ -1,0 +1,127 @@
+<div class="space-y-6" id="evaluations_section">
+  <!-- Evaluation Header & Action -->
+  <div class="p-6 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center space-x-3">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold <%= @evaluation_report.all_passed? ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' %>">
+            <%= @evaluation_report.all_passed? ? 'ALL CHECKS PASSED' : "#{@evaluation_report.failed_count} FAILED" %>
+          </span>
+          <span class="text-xs font-mono text-slate-500">
+            Completed in <%= @evaluation_report.duration_ms %>ms
+          </span>
+        </div>
+        <h3 class="mt-2 text-lg font-black font-sans text-[#0d0726]">20 Canonical Evaluation Test Cases</h3>
+        <p class="text-xs font-mono text-slate-600 mt-1">
+          Executes the complete deterministic governance test suite inside an isolated transactional sandbox with zero database pollution.
+        </p>
+      </div>
+
+      <div>
+        <%= button_to run_governance_evaluations_path(range: @scope&.range, start_date: params[:start_date], end_date: params[:end_date]),
+                      method: :post,
+                      data: { turbo_stream: true },
+                      class: "inline-flex items-center px-4 py-2 text-xs font-mono font-bold rounded-xl bg-[#0d0726] text-white hover:bg-slate-800 transition cursor-pointer shadow-sm" do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Re-Run Evaluation Suite
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Summary Stats Bar -->
+    <div class="mt-6 pt-5 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div>
+        <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Total Cases</span>
+        <div class="text-2xl font-black font-sans text-[#0d0726]"><%= @evaluation_report.total_cases %></div>
+      </div>
+      <div>
+        <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-700">Passed</span>
+        <div class="text-2xl font-black font-sans text-emerald-600"><%= @evaluation_report.passed_count %></div>
+      </div>
+      <div>
+        <span class="text-[10px] font-mono uppercase tracking-wider text-rose-700">Failed</span>
+        <div class="text-2xl font-black font-sans <%= @evaluation_report.failed_count > 0 ? 'text-rose-600' : 'text-slate-400' %>">
+          <%= @evaluation_report.failed_count %>
+        </div>
+      </div>
+      <div>
+        <span class="text-[10px] font-mono uppercase tracking-wider text-indigo-700">Pass Rate</span>
+        <div class="text-2xl font-black font-sans text-indigo-600"><%= @evaluation_report.pass_rate %>%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Breakdown Summaries -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <% @evaluation_report.category_summary.each do |cat, stats| %>
+      <div class="p-4 rounded-xl bg-white border border-slate-300 shadow-2xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold uppercase text-slate-700">
+            <%= cat.to_s.humanize %>
+          </span>
+          <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded <%= stats[:failed] == 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' %>">
+            <%= stats[:rate] %>%
+          </span>
+        </div>
+        <div class="mt-2 text-sm font-mono text-slate-600">
+          <%= stats[:passed] %> of <%= stats[:total] %> test cases passed
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Detailed Results Table -->
+  <div class="rounded-2xl bg-white border border-slate-300 shadow-2xs overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200">
+      <h4 class="text-sm font-bold font-sans text-[#0d0726]">Detailed Test Case Matrix</h4>
+      <p class="text-xs font-mono text-slate-500">Every case tests a core assertion of the Ruby governance model</p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">Test Case</th>
+            <th class="px-6 py-3 text-left text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">Category</th>
+            <th class="px-6 py-3 text-left text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">Expected</th>
+            <th class="px-6 py-3 text-left text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">Actual</th>
+            <th class="px-6 py-3 text-left text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">Status</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-slate-100">
+          <% @evaluation_report.results.each do |res| %>
+            <tr class="hover:bg-slate-50/70 transition">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-2">
+                  <span class="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    <%= res.test_case_id %>
+                  </span>
+                  <span class="text-xs font-medium text-slate-900"><%= res.test_case_name %></span>
+                </div>
+                <% if res.failure_explanation %>
+                  <div class="mt-1 text-xs text-rose-600 font-mono"><%= res.failure_explanation %></div>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-xs font-mono text-slate-600 capitalize"><%= res.category %></span>
+              </td>
+              <td class="px-6 py-4 text-xs font-mono text-slate-600">
+                <code><%= res.expected_result %></code>
+              </td>
+              <td class="px-6 py-4 text-xs font-mono <%= res.passed? ? 'text-emerald-700' : 'text-rose-700' %>">
+                <code><%= res.actual_result %></code>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold <%= res.passed? ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' %>">
+                  <%= res.status_label %>
+                </span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

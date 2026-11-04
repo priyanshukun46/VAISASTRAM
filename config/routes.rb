@@ -47,5 +47,12 @@ Rails.application.routes.draw do
     end
   end
 
+  # Governance Dashboard Routes
+  get "governance", to: "governance#index", as: :governance
+  post "governance/run_evaluations", to: "governance#run_evaluations", as: :run_governance_evaluations
+  post "governance/verify_audit", to: "governance#verify_audit", as: :verify_governance_audit
+
+  # Evaluation Center Routes
   get "evaluations", to: "evaluations#index", as: :evaluations
+  post "evaluations/run", to: "evaluations#run", as: :run_evaluations
 end

@@ -1,0 +1,138 @@
+<div class="space-y-6" id="audit_health_section">
+  <!-- Audit Integrity Verification Banner -->
+  <% v = @audit_health[:verification] %>
+  <div class="p-6 rounded-2xl <%= v[:verified] ? (v[:broken_chains_count] == 0 ? 'bg-emerald-50/70 border-emerald-300' : 'bg-rose-50/70 border-rose-300') : 'bg-white border-slate-300' %> border shadow-2xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center space-x-3">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold <%= v[:verified] ? (v[:broken_chains_count] == 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800') : 'bg-slate-100 text-slate-700' %>">
+            <%= v[:status_label] %>
+          </span>
+          <span class="text-xs font-mono text-slate-500">
+            <% if v[:last_verified_at] %>
+              Last checked <%= time_ago_in_words(v[:last_verified_at]) %> ago
+            <% else %>
+              On-demand cryptographic verification
+            <% end %>
+          </span>
+        </div>
+        <h3 class="mt-2 text-lg font-black font-sans text-[#0d0726]">SHA-256 Hash Chain Integrity</h3>
+        <p class="text-xs font-mono text-slate-600 mt-1">
+          Cryptographically re-hashes sequential audit records using stored previous hashes and current event payloads to detect database tampering.
+        </p>
+      </div>
+
+      <div>
+        <%= button_to verify_governance_audit_path(range: @scope.range, start_date: params[:start_date], end_date: params[:end_date]),
+                      method: :post,
+                      data: { turbo_stream: true },
+                      class: "inline-flex items-center px-4 py-2 text-xs font-mono font-bold rounded-xl bg-[#0d0726] text-white hover:bg-slate-800 transition cursor-pointer shadow-sm" do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          Run Cryptographic Verification
+        <% end %>
+      </div>
+    </div>
+
+    <% if v[:verified] %>
+      <div class="mt-5 pt-4 border-t <%= v[:broken_chains_count] == 0 ? 'border-emerald-200' : 'border-rose-200' %> grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Verified Chains</span>
+          <div class="text-xl font-mono font-black text-[#0d0726]"><%= v[:verified_chains] %></div>
+        </div>
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Broken Chains</span>
+          <div class="text-xl font-mono font-black <%= v[:broken_chains_count] > 0 ? 'text-rose-600' : 'text-emerald-600' %>">
+            <%= v[:broken_chains_count] %>
+          </div>
+        </div>
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Tampered Events</span>
+          <div class="text-xl font-mono font-black <%= v[:tampered_events_count] > 0 ? 'text-rose-600' : 'text-emerald-600' %>">
+            <%= v[:tampered_events_count] %>
+          </div>
+        </div>
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Sequence Gaps</span>
+          <div class="text-xl font-mono font-black <%= v[:missing_sequences_count] > 0 ? 'text-rose-600' : 'text-emerald-600' %>">
+            <%= v[:missing_sequences_count] %>
+          </div>
+        </div>
+      </div>
+
+      <% if v[:failed_checks].present? %>
+        <div class="mt-4 p-3 rounded-lg bg-rose-100 text-rose-900 text-xs font-mono space-y-1">
+          <div class="font-bold">Detected Integrity Errors:</div>
+          <% v[:failed_checks].each do |err| %>
+            <div>• <%= err %></div>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Audit Summary Stats -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Total Audit Events</span>
+      <div class="mt-2 text-3xl font-black font-sans text-[#0d0726]"><%= @audit_health[:total_events] %></div>
+      <div class="mt-1 text-xs font-mono text-slate-500">In scoped time window</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Actors Tracked</span>
+      <div class="mt-2 text-xl font-mono font-bold text-slate-800 space-x-2">
+        <% @audit_health[:events_by_actor].each do |actor, count| %>
+          <span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-xs"><%= actor %>: <%= count %></span>
+        <% end %>
+      </div>
+      <div class="mt-1 text-xs font-mono text-slate-500">AI agents, users, and policy engine</div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Unlinked Task Events</span>
+      <div class="mt-2 text-3xl font-black font-sans <%= @audit_health[:events_missing_task] > 0 ? 'text-amber-600' : 'text-emerald-600' %>">
+        <%= @audit_health[:events_missing_task] %>
+      </div>
+      <div class="mt-1 text-xs font-mono text-slate-500">Non-system events without task reference</div>
+    </div>
+  </div>
+
+  <!-- Event Types Distribution Table -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">Events by Type</h3>
+      <p class="text-xs font-mono text-slate-500">Distribution across governance event taxonomy</p>
+      <div class="mt-4 space-y-2">
+        <% if @audit_health[:events_by_type].any? %>
+          <% @audit_health[:events_by_type].each do |type, count| %>
+            <div class="flex items-center justify-between text-xs font-mono py-1.5 border-b border-slate-100 last:border-0">
+              <span class="font-bold text-slate-800"><%= type %></span>
+              <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold"><%= count %></span>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="py-6 text-center text-xs font-mono text-slate-400">No audit events recorded</div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
+      <h3 class="text-sm font-bold font-sans text-[#0d0726]">High Volume Execution Trails</h3>
+      <p class="text-xs font-mono text-slate-500">Executions generating largest audit footprint</p>
+      <div class="mt-4 space-y-2">
+        <% if @audit_health[:events_by_execution].any? %>
+          <% @audit_health[:events_by_execution].each do |exec_id, count| %>
+            <div class="flex items-center justify-between text-xs font-mono py-1.5 border-b border-slate-100 last:border-0">
+              <span class="font-bold text-indigo-700">Execution #<%= exec_id %></span>
+              <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold"><%= count %> events</span>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="py-6 text-center text-xs font-mono text-slate-400">No execution-linked events</div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

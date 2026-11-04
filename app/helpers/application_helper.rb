@@ -102,4 +102,66 @@ module ApplicationHelper
       content_tag(:span, risk_level.to_s.upcase, class: "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-700 border border-slate-300")
     end
   end
+
+  # Formats raw AI response text with Markdown formatting (paragraphs, line breaks, bold, italics, code blocks, lists)
+  # while strictly sanitizing via ERB::Util.html_escape to guarantee zero XSS vulnerability.
+  def format_ai_response(text)
+    return "" if text.blank?
+
+    escaped = ERB::Util.html_escape(text.to_s)
+
+    # 1. Fenced code blocks ```lang\ncode\n```
+    escaped = escaped.gsub(/```([a-zA-Z0-9_-]*)\n?(.*?)\n?```/m) do
+      lang = Regexp.last_match(1).presence
+      code = Regexp.last_match(2)
+      header = lang ? "<div class=\"text-[10px] uppercase font-mono text-slate-400 bg-slate-800 px-3 py-1 rounded-t-lg border-b border-slate-700\">#{lang}</div>" : ""
+      "#{header}<pre class=\"bg-slate-900 text-slate-100 p-3.5 #{lang ? 'rounded-b-lg' : 'rounded-lg'} font-mono text-xs overflow-x-auto my-2.5 leading-relaxed\"><code>#{code}</code></pre>"
+    end
+
+    # 2. Inline code `code`
+    escaped = escaped.gsub(/`([^`\n]+)`/) do
+      "<code class=\"bg-slate-100 text-[#7c5cfc] px-1.5 py-0.5 rounded font-mono text-xs border border-slate-200 font-semibold\">#{Regexp.last_match(1)}</code>"
+    end
+
+    # 3. Bold: **text** or __text__
+    escaped = escaped.gsub(/(\*\*|__)(.*?)\1/) do
+      "<strong class=\"font-bold text-slate-900\">#{Regexp.last_match(2)}</strong>"
+    end
+
+    # 4. Italics: *text* or _text_ (excluding inside words)
+    escaped = escaped.gsub(/(?<!\w)([*_])([^*\n_]+)\1(?!\w)/) do
+      "<em class=\"italic text-slate-700\">#{Regexp.last_match(2)}</em>"
+    end
+
+    # 5. Headers: ### H3, ## H2, # H1
+    escaped = escaped.gsub(/^###\s+(.+)$/) { "<h3 class=\"font-black text-slate-900 text-sm mt-3 mb-1.5 uppercase font-sans tracking-tight\">#{Regexp.last_match(1)}</h3>" }
+    escaped = escaped.gsub(/^##\s+(.+)$/) { "<h2 class=\"font-black text-slate-900 text-base mt-4 mb-2 uppercase font-sans tracking-tight\">#{Regexp.last_match(1)}</h2>" }
+    escaped = escaped.gsub(/^#\s+(.+)$/) { "<h1 class=\"font-black text-slate-900 text-lg mt-4 mb-2 uppercase font-sans tracking-tight\">#{Regexp.last_match(1)}</h1>" }
+
+    # 6. Blockquotes: > quote
+    escaped = escaped.gsub(/^>\s+(.+)$/) do
+      "<blockquote class=\"border-l-4 border-[#7c5cfc] pl-3 py-1 my-2 bg-slate-50 rounded-r text-slate-700 italic text-xs\">#{Regexp.last_match(1)}</blockquote>"
+    end
+
+    # 7. Split into paragraphs by double newlines, preserving single newlines as <br/> within stanzas/paragraphs
+    paragraphs = escaped.split(/\n\s*\n/)
+    formatted = paragraphs.map do |para|
+      trimmed = para.strip
+      next "" if trimmed.blank?
+      if trimmed.start_with?("<pre", "<div class=\"text-[10px]", "<h1", "<h2", "<h3", "<blockquote")
+        trimmed
+      elsif trimmed.lines.all? { |line| line.strip.start_with?("- ", "* ") }
+        items = trimmed.lines.map { |l| "<li class=\"list-disc ml-5 my-0.5 leading-relaxed text-sm text-slate-800\">#{l.strip.sub(/^[-*]\s+/, '')}</li>" }.join
+        "<ul class=\"my-2 space-y-0.5\">#{items}</ul>"
+      elsif trimmed.lines.all? { |line| line.strip.match?(/^\d+\.\s+/) }
+        items = trimmed.lines.map { |l| "<li class=\"list-decimal ml-5 my-0.5 leading-relaxed text-sm text-slate-800\">#{l.strip.sub(/^\d+\.\s+/, '')}</li>" }.join
+        "<ol class=\"my-2 space-y-0.5\">#{items}</ol>"
+      else
+        with_breaks = trimmed.gsub("\n", "<br/>")
+        "<p class=\"text-sm text-slate-800 leading-relaxed font-normal my-2\">#{with_breaks}</p>"
+      end
+    end.reject(&:blank?).join("\n")
+
+    raw(formatted)
+  end
 end

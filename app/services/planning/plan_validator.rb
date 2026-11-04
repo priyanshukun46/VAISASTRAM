@@ -173,8 +173,8 @@ module Planning
         action = (step["action"] || step[:action]).to_s.strip
         raise ValidationError, "Step ##{step_num} action cannot be blank" if action.empty?
 
-        unless action =~ /\A[a-z0-9_]+\z/
-          raise ValidationError, "Step ##{step_num} action '#{action}' has invalid format; only lowercase alphanumeric and underscores allowed"
+        unless action =~ /\A[a-z0-9_.]+\z/
+          raise ValidationError, "Step ##{step_num} action '#{action}' has invalid format; only lowercase alphanumeric, underscores, and dots allowed"
         end
 
         if allowed_tools.present? && !allowed_tools.include?(action)

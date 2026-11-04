@@ -203,7 +203,7 @@ agent.description = "General-purpose governed autonomous AI agent platform with 
 agent.status = "active"
 agent.configuration = {
   allowed_tools: ["lookup_invoice", "verify_invoice", "prepare_payment"],
-  model: "gemini-2.5-pro",
+  model: "gemini-3.8-flash",
   max_steps: 6
 }
 agent.save!

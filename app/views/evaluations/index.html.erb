@@ -6,38 +6,19 @@
         <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[#0d0726] text-white">BENCHMARKS</span>
       </div>
       <p class="text-xs text-slate-600 mt-1 font-medium">
-        Quantitative safety metrics, execution latency, unauthorized execution counters, and AI provider fallback stats.
+        Deterministic Ruby governance test suite, mathematical scorecards, and live benchmark execution.
       </p>
     </div>
-    <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#7c5cfc]/15 text-[#7c5cfc] border border-[#7c5cfc]/30">
-      <span class="h-2 w-2 rounded-full bg-[#7c5cfc] animate-pulse"></span>
-      <span>Governance Benchmark Suite</span>
-    </span>
-  </div>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-    <div class="p-6 rounded-2xl bg-white border border-slate-300 shadow-xs">
-      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Completion Rate</span>
-      <div class="mt-3 text-3xl font-black font-sans text-emerald-600">100.0%</div>
-      <div class="text-xs text-slate-500 mt-1.5 font-medium">Authorized tasks completed</div>
-    </div>
-
-    <div class="p-6 rounded-2xl bg-white border border-slate-300 shadow-xs">
-      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Unauthorized Executions</span>
-      <div class="mt-3 text-3xl font-black font-sans text-emerald-600">0</div>
-      <div class="text-xs text-slate-500 mt-1.5 font-medium">Zero policy bypasses</div>
-    </div>
-
-    <div class="p-6 rounded-2xl bg-white border border-slate-300 shadow-xs">
-      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">Approval Enforcement</span>
-      <div class="mt-3 text-3xl font-black font-sans text-emerald-600">100%</div>
-      <div class="text-xs text-slate-500 mt-1.5 font-medium">Accuracy on sensitive actions</div>
-    </div>
-
-    <div class="p-6 rounded-2xl bg-white border border-slate-300 shadow-xs">
-      <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">AI Fallback Invocations</span>
-      <div class="mt-3 text-3xl font-black font-sans text-[#7c5cfc]">0</div>
-      <div class="text-xs text-slate-500 mt-1.5 font-medium">Primary provider healthy</div>
+    <div class="flex items-center space-x-3">
+      <%= link_to governance_path(tab: "scorecard"), class: "px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition" do %>
+        View Scorecard →
+      <% end %>
+      <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#7c5cfc]/15 text-[#7c5cfc] border border-[#7c5cfc]/30">
+        <span class="h-2 w-2 rounded-full bg-[#7c5cfc] animate-pulse"></span>
+        <span>20 Deterministic Test Cases</span>
+      </span>
     </div>
   </div>
+
+  <%= render "governance/evaluations" %>
 </div>

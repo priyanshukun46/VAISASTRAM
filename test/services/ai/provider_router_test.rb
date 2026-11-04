@@ -380,4 +380,46 @@ class AiProviderRouterTest < ActiveSupport::TestCase
     assert_equal 0, ollama.calls, "Ollama must be skipped in cloud mode"
     assert_equal 1, gemini.calls
   end
+
+  test "resolve_provider creates appropriate provider instances" do
+    assert_instance_of Ai::OpenaiProvider, Ai::ProviderRouter.resolve_provider("openai")
+    assert_instance_of Ai::XaiProvider, Ai::ProviderRouter.resolve_provider("grok")
+    assert_instance_of Ai::XaiProvider, Ai::ProviderRouter.resolve_provider("xai")
+    assert_instance_of Ai::GroqProvider, Ai::ProviderRouter.resolve_provider("groq")
+    assert_instance_of Ai::GeminiProvider, Ai::ProviderRouter.resolve_provider("gemini")
+    assert_instance_of Ai::OllamaProvider, Ai::ProviderRouter.resolve_provider("ollama")
+  end
+
+  test "mode cloud respects AI_PRIMARY_PROVIDER=openai and AI_FALLBACK_PROVIDER=grok" do
+    ENV["AI_PRIMARY_PROVIDER"] = "openai"
+    ENV["AI_FALLBACK_PROVIDER"] = "grok"
+    ENV["AI_PROVIDER_MODE"] = "cloud"
+
+    router = Ai::ProviderRouter.new
+    assert_equal "openai", router.primary_provider.provider_name
+    assert_equal "grok", router.fallback_provider.provider_name
+  ensure
+    ENV.delete("AI_PRIMARY_PROVIDER")
+    ENV.delete("AI_FALLBACK_PROVIDER")
+    ENV.delete("AI_PROVIDER_MODE")
+  end
+
+  test "mode cloud does not invoke fallback provider when cloud_fallback_enabled is false" do
+    primary_err = Ai::ServerError.new("Primary 500", provider: "primary", status_code: 500)
+    primary = FailingProvider.new("primary", primary_err)
+    fallback = MockProvider.new("fallback")
+
+    router = Ai::ProviderRouter.new(
+      cloud_primary_provider: primary,
+      cloud_fallback_provider: fallback,
+      mode: "cloud",
+      cloud_fallback_enabled: false
+    )
+
+    assert_raises(Ai::AllProvidersFailedError) do
+      router.generate("Plan payment")
+    end
+
+    assert_equal 0, fallback.calls, "Fallback must not be called when cloud_fallback_enabled is false"
+  end
 end

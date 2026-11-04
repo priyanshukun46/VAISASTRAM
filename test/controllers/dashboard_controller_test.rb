@@ -75,13 +75,13 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
-  test "allows new user registration with name and role" do
+  test "registration ignores client-supplied role and defaults to operator" do
     assert_difference("User.count", 1) do
       post user_registration_url, params: {
         user: {
           name: "New Operator",
           email: "new_op@vaisastram.internal",
-          role: "operator",
+          role: "admin",
           password: "password123",
           password_confirmation: "password123"
         }
@@ -91,6 +91,14 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     new_user = User.find_by(email: "new_op@vaisastram.internal")
     assert_equal "New Operator", new_user.name
     assert_equal "operator", new_user.role
+  end
+
+  test "account update cannot escalate role" do
+    sign_in @user # operator
+    patch user_registration_url, params: {
+      user: { name: "Operator One", role: "admin", current_password: "password123" }
+    }
+    assert_equal "operator", @user.reload.role
   end
 
   test "authorize_record_access denies access to foreign records for standard operator" do
